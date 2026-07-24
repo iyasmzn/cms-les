@@ -20,7 +20,6 @@ use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SpmbController;
 use App\Http\Controllers\StaticPageController;
-use App\Http\Controllers\StoryController;
 use App\Http\Controllers\TeacherController;
 use Illuminate\Support\Facades\Route;
 
@@ -114,10 +113,6 @@ Route::get('/kegiatan/{event:slug}', [EventController::class, 'show'])->name('ev
 // Program
 Route::get('/program', [ProgramController::class, 'index'])->name('programs.index');
 Route::get('/program/{program:slug}', [ProgramController::class, 'show'])->name('programs.show');
-
-// Cerita Santri
-Route::get('/cerita-santri', [StoryController::class, 'index'])->name('stories.index');
-Route::get('/cerita-santri/{story:slug}', [StoryController::class, 'show'])->name('stories.show');
 
 // Kontak
 Route::get('/kontak', [ContactController::class, 'index'])->name('contact.index');

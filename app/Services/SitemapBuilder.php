@@ -6,7 +6,6 @@ use App\Models\Event;
 use App\Models\Post;
 use App\Models\Program;
 use App\Models\StaticPage;
-use App\Models\Story;
 use Spatie\Sitemap\Sitemap;
 use Spatie\Sitemap\Tags\Url;
 
@@ -33,7 +32,6 @@ class SitemapBuilder
             ['route' => 'blog.index',      'priority' => 0.8, 'freq' => 'daily'],
             ['route' => 'events.index',    'priority' => 0.8, 'freq' => 'weekly'],
             ['route' => 'programs.index',  'priority' => 0.7, 'freq' => 'monthly'],
-            ['route' => 'stories.index',   'priority' => 0.6, 'freq' => 'weekly'],
             ['route' => 'teachers.index',  'priority' => 0.6, 'freq' => 'monthly'],
             ['route' => 'downloads.index', 'priority' => 0.6, 'freq' => 'weekly'],
             ['route' => 'gallery.index',   'priority' => 0.5, 'freq' => 'weekly'],
@@ -81,17 +79,6 @@ class SitemapBuilder
                     Url::create(route('programs.show', $program->slug))
                         ->setLastModificationDate($program->updated_at)
                         ->setPriority(0.6)
-                        ->setChangeFrequency('monthly')
-                );
-            });
-
-        /* ── Stories ── */
-        Story::where('is_published', true)
-            ->each(function (Story $story) use ($sitemap) {
-                $sitemap->add(
-                    Url::create(route('stories.show', $story->slug))
-                        ->setLastModificationDate($story->updated_at)
-                        ->setPriority(0.5)
                         ->setChangeFrequency('monthly')
                 );
             });

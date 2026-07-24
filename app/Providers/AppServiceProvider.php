@@ -8,7 +8,6 @@ use App\Models\Program;
 use App\Models\Setting;
 use App\Models\Slide;
 use App\Models\StaticPage;
-use App\Models\Story;
 use App\Models\Teacher;
 use App\Observers\PostObserver;
 use App\Observers\SlideObserver;
@@ -59,7 +58,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $forget = fn (Model $model) => Cache::forget(SitemapBuilder::CACHE_KEY);
 
-        foreach ([Post::class, Event::class, Program::class, Story::class, StaticPage::class] as $model) {
+        foreach ([Post::class, Event::class, Program::class, StaticPage::class] as $model) {
             $model::saved($forget);
             $model::deleted($forget);
         }

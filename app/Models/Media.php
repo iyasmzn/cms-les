@@ -40,7 +40,6 @@ class Media extends Model
         'downloads' => 'Unduhan',
         'products' => 'Produk',
         'events' => 'Kegiatan',
-        'stories' => 'Cerita Santri',
         'popups' => 'Popup',
     ];
 

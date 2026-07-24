@@ -73,7 +73,6 @@ class SettingSeeder extends Seeder
                 ['label' => 'Profil',   'url' => '#sambutan',      'target' => '_self', 'is_active' => true, 'children' => []],
                 ['label' => 'Layanan',  'url' => '/program',       'target' => '_self', 'is_active' => true, 'children' => []],
                 ['label' => 'Agenda',   'url' => '/kegiatan',      'target' => '_self', 'is_active' => true, 'children' => []],
-                ['label' => 'Cerita',   'url' => '/cerita-santri', 'target' => '_self', 'is_active' => true, 'children' => []],
                 ['label' => 'Blog',     'url' => '/blog',          'target' => '_self', 'is_active' => true, 'children' => []],
                 ['label' => 'Kontak',   'url' => '#kontak',        'target' => '_self', 'is_active' => true, 'children' => []],
             ]),
@@ -112,7 +111,6 @@ class SettingSeeder extends Seeder
                 ['icon' => '📚', 'label' => 'Katalog',     'url' => '/buku',          'is_active' => true],
                 ['icon' => '🎓', 'label' => 'Layanan',     'url' => '/program',       'is_active' => true],
                 ['icon' => '🗓', 'label' => 'Agenda',      'url' => '/kegiatan',      'is_active' => true],
-                ['icon' => '📖', 'label' => 'Cerita',      'url' => '/cerita-santri', 'is_active' => true],
                 ['icon' => '📞', 'label' => 'Kontak',      'url' => '#kontak',        'is_active' => true],
             ]),
         ];

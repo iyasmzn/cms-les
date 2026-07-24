@@ -47,7 +47,6 @@ class DatabaseSeeder extends Seeder
         $this->call(ProductSeeder::class);
         $this->call(EventSeeder::class);
         $this->call(ProgramSeeder::class);
-        $this->call(StorySeeder::class);
         $this->call(SettingSeeder::class);
         $this->call(InstitutionSeeder::class);
         $this->call(PpdbFieldSeeder::class);
