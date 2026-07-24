@@ -97,8 +97,6 @@ class FooterSettings extends Page
                                     ->options([
                                         '' => 'Selalu tampil',
                                         'toko' => 'Toko aktif',
-                                        'donasi' => 'Donasi aktif',
-                                        'pertanyaan' => 'Pertanyaan aktif',
                                     ])
                                     ->default('')
                                     ->columnSpan(3),
@@ -204,7 +202,6 @@ class FooterSettings extends Page
             ['label' => 'Blog & Berita',   'url' => '/blog',     'feature' => '',     'is_active' => true],
             ['label' => 'Unduhan',         'url' => '/unduhan',  'feature' => '',       'is_active' => true],
             ['label' => 'Tenaga Pendidik', 'url' => '/guru',     'feature' => '',       'is_active' => true],
-            ['label' => 'Donasi',          'url' => '/donasi',   'feature' => 'donasi', 'is_active' => true],
             ['label' => 'Keranjang',       'url' => '/keranjang', 'feature' => 'toko',  'is_active' => true],
         ];
     }

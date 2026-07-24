@@ -332,7 +332,6 @@
                         ['label' => 'Blog & Berita',   'url' => '/blog',      'feature' => '',     'is_active' => true],
                         ['label' => 'Unduhan',         'url' => '/unduhan',   'feature' => '',       'is_active' => true],
                         ['label' => 'Tenaga Pendidik', 'url' => '/guru',      'feature' => '',       'is_active' => true],
-                        ['label' => 'Donasi',          'url' => '/donasi',    'feature' => 'donasi', 'is_active' => true],
                         ['label' => 'Keranjang',       'url' => '/keranjang', 'feature' => 'toko',   'is_active' => true],
                     ])
                         ->filter(fn ($l) => ($l['is_active'] ?? true) && (blank($l['feature'] ?? '') || feature_enabled($l['feature'])))

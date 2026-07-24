@@ -77,7 +77,7 @@ class IntegrationSettings extends Page
     private function turnstileSection(): Section
     {
         return Section::make('Cloudflare Turnstile (Captcha)')
-            ->description('Lindungi form publik (Tanya Jawab, Donasi, PPDB) dari bot & spam. Gratis tanpa batas. Dapatkan Site Key dan Secret Key dari dashboard Cloudflare → Turnstile → Add Site.')
+            ->description('Lindungi form publik (PPDB, komentar) dari bot & spam. Gratis tanpa batas. Dapatkan Site Key dan Secret Key dari dashboard Cloudflare → Turnstile → Add Site.')
             ->icon(Heroicon::OutlinedShieldCheck)
             ->schema([
                 Toggle::make('turnstile_enabled')

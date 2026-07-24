@@ -3,11 +3,9 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Comment;
-use App\Models\Donation;
 use App\Models\Event;
 use App\Models\Media;
 use App\Models\Post;
-use App\Models\Question;
 use App\Models\SpmbRegistration;
 use App\Models\Teacher;
 use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
@@ -61,21 +59,6 @@ class StatsOverviewWidget extends BaseStatsOverviewWidget
             ->count()
         )->toArray();
 
-        $donationTotal = Donation::where('status', 'confirmed')->sum('amount');
-        $donationThisMonth = Donation::where('status', 'confirmed')
-            ->whereYear('confirmed_at', $thisYear)
-            ->whereMonth('confirmed_at', $thisMonth)
-            ->sum('amount');
-
-        $donationTrend = collect(range(5, 0))->map(fn ($monthsAgo) => (int) Donation::query()
-            ->where('status', 'confirmed')
-            ->whereYear('confirmed_at', $now->copy()->subMonths($monthsAgo)->year)
-            ->whereMonth('confirmed_at', $now->copy()->subMonths($monthsAgo)->month)
-            ->sum('amount') / 1_000_000
-        )->toArray();
-
-        $unansweredQuestions = Question::where('is_answered', false)->count();
-
         $pendingComments = Comment::where('is_approved', false)->count();
 
         $upcomingEvents = Event::where('is_published', true)
@@ -98,21 +81,6 @@ class StatsOverviewWidget extends BaseStatsOverviewWidget
                 ->descriptionIcon(Heroicon::ClipboardDocumentCheck)
                 ->chart($spmbTrend)
                 ->color('warning'),
-
-            feature_enabled('donasi')
-                ? Stat::make('Total Donasi Masuk', 'Rp '.number_format($donationTotal, 0, ',', '.'))
-                    ->description('Rp '.number_format($donationThisMonth, 0, ',', '.').' bulan ini')
-                    ->descriptionIcon(Heroicon::Heart)
-                    ->chart($donationTrend)
-                    ->color('danger')
-                : null,
-
-            feature_enabled('pertanyaan')
-                ? Stat::make('Pertanyaan Belum Dijawab', $unansweredQuestions)
-                    ->description('Dari total '.Question::count().' pertanyaan masuk')
-                    ->descriptionIcon(Heroicon::ChatBubbleLeftRight)
-                    ->color($unansweredQuestions > 0 ? 'warning' : 'success')
-                : null,
 
             Stat::make('Komentar Perlu Moderasi', $pendingComments)
                 ->description('Dari total '.Comment::count().' komentar masuk')

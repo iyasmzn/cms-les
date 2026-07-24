@@ -177,9 +177,6 @@ class AdminPanelProvider extends PanelProvider
                     ->label('Interaksi')
                     ->icon(Heroicon::OutlinedChatBubbleBottomCenterText),
                 NavigationGroup::make()
-                    ->label('Donasi')
-                    ->icon(Heroicon::OutlinedHeart),
-                NavigationGroup::make()
                     ->label('Tampilan Website')
                     ->icon(Heroicon::OutlinedPaintBrush),
                 NavigationGroup::make()

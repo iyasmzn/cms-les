@@ -50,7 +50,6 @@ class LandingPageSettings extends Page
             ['key' => 'section_gallery',     'label' => '🖼️  Galeri Foto',              'visible' => true],
             ['key' => 'section_blog',        'label' => '📰  Blog & Berita',             'visible' => true],
             ['key' => 'section_testimonials', 'label' => '💬  Kesan & Pesan Alumni',      'visible' => true],
-            ['key' => 'section_donasi',      'label' => '💝  Donasi',                   'visible' => true],
             ['key' => 'section_contact',     'label' => '📞  Kontak Kami',               'visible' => true],
         ];
     }
@@ -120,14 +119,6 @@ class LandingPageSettings extends Page
                 'eyebrow' => 'Hubungi Kami',
                 'title' => 'Kami Siap Membantu Anda',
                 'subtitle' => 'Punya pertanyaan seputar SPMB, akademik, atau kegiatan sekolah? Jangan ragu untuk menghubungi kami.',
-            ],
-            'donasi' => [
-                'label' => 'Donasi',
-                'icon' => Heroicon::OutlinedHeart,
-                'eyebrow' => 'Program Donasi',
-                'title' => 'Bersama Wujudkan',
-                'subtitle' => 'Setiap kontribusi Anda sangat berarti bagi perkembangan pendidikan santri. Donasi Anda akan digunakan untuk pengadaan sarana belajar, beasiswa, dan program-program pesantren.',
-                'highlight' => 'Pendidikan Berkualitas',
             ],
         ];
     }

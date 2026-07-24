@@ -219,7 +219,6 @@
         ['key' => 'section_gallery',     'visible' => true],
         ['key' => 'section_blog',        'visible' => true],
         ['key' => 'section_testimonials','visible' => true],
-        ['key' => 'section_donasi',      'visible' => true],
         ['key' => 'section_contact',     'visible' => true],
     ];
 
@@ -247,7 +246,6 @@
         'section_gallery'     => 'sections.gallery',
         'section_blog'        => 'sections.blog',
         'section_testimonials'=> 'sections.testimonials',
-        'section_donasi'      => 'sections.donasi',
         'section_contact'     => 'sections.contact',
     ];
 @endphp
@@ -269,7 +267,6 @@
         // Landing sections tied to a toggleable feature; hidden when it is off.
         $sectionFeature = [
             'section_products' => 'toko',
-            'section_donasi' => 'donasi',
         ];
     @endphp
     @foreach($sectionOrder as $section)
@@ -396,7 +393,6 @@
                         ['label' => 'Blog & Berita',   'url' => '/blog',      'feature' => '',       'is_active' => true],
                         ['label' => 'Unduhan',         'url' => '/unduhan',   'feature' => '',       'is_active' => true],
                         ['label' => 'Tenaga Pendidik', 'url' => '/guru',      'feature' => '',       'is_active' => true],
-                        ['label' => 'Donasi',          'url' => '/donasi',    'feature' => 'donasi', 'is_active' => true],
                         ['label' => 'Keranjang',       'url' => '/keranjang', 'feature' => 'toko',   'is_active' => true],
                     ])
                         ->filter(fn ($l) => ($l['is_active'] ?? true) && (blank($l['feature'] ?? '') || feature_enabled($l['feature'])))

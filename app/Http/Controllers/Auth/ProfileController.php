@@ -20,10 +20,6 @@ class ProfileController extends Controller
 
         return view('auth.profile', [
             'user' => $user,
-            'myQuestions' => $user->questions()
-                ->with('post')
-                ->latest()
-                ->get(),
             'myComments' => $user->comments()
                 ->with('post')
                 ->latest()

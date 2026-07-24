@@ -38,7 +38,6 @@ class SitemapBuilder
             ['route' => 'downloads.index', 'priority' => 0.6, 'freq' => 'weekly'],
             ['route' => 'gallery.index',   'priority' => 0.5, 'freq' => 'weekly'],
             ['route' => 'ppdb.index',      'priority' => 0.7, 'freq' => 'monthly'],
-            ['route' => 'donasi.index',    'priority' => 0.5, 'freq' => 'monthly'],
             ['route' => 'kontak',          'priority' => 0.5, 'freq' => 'monthly'],
         ] as $page) {
             try {

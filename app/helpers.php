@@ -132,8 +132,6 @@ if (! function_exists('feature_enabled')) {
      * Whether a public-facing feature is enabled, honouring dependencies.
      *
      * Dependencies:
-     *  - "pertanyaan" requires "login_register" (submitting a question needs an
-     *    account), so it is locked off whenever login/register is disabled.
      *  - "toko_checkout" requires both the shop and login/register: the shop may
      *    stay enabled for browsing while checkout is unavailable without login.
      *
@@ -145,10 +143,8 @@ if (! function_exists('feature_enabled')) {
 
         return match ($feature) {
             'login_register' => $loginRegister,
-            'donasi' => setting_bool('feature_donasi', true),
             'toko' => setting_bool('feature_toko', true),
             'toko_checkout' => setting_bool('feature_toko', true) && $loginRegister,
-            'pertanyaan' => $loginRegister && setting_bool('feature_pertanyaan', true),
             default => setting_bool('feature_'.$feature, true),
         };
     }

@@ -60,8 +60,6 @@ class LandingPageSettingsTest extends TestCase
                 'section_programs_eyebrow' => 'Program Kami',
                 'section_programs_title' => 'Program Andalan Pesantren',
                 'section_programs_subtitle' => 'Deskripsi program yang sudah diubah.',
-                'section_donasi_title' => 'Mari Berdonasi',
-                'section_donasi_title_highlight' => 'Untuk Santri Berprestasi',
             ])
             ->call('save')
             ->assertHasNoFormErrors();
@@ -71,8 +69,6 @@ class LandingPageSettingsTest extends TestCase
         $this->assertSame('Program Kami', Setting::get('section_programs_eyebrow'));
         $this->assertSame('Program Andalan Pesantren', Setting::get('section_programs_title'));
         $this->assertSame('Deskripsi program yang sudah diubah.', Setting::get('section_programs_subtitle'));
-        $this->assertSame('Mari Berdonasi', Setting::get('section_donasi_title'));
-        $this->assertSame('Untuk Santri Berprestasi', Setting::get('section_donasi_title_highlight'));
     }
 
     public function test_it_keeps_section_order_and_visibility_when_saving_content(): void

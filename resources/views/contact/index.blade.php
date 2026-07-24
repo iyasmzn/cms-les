@@ -126,18 +126,6 @@
                 </iframe>
             </div>
         </div>
-        @elseif(feature_enabled('pertanyaan'))
-        {{-- Tanya Jawab CTA --}}
-        <div class="text-center py-12 rounded-2xl border-2 border-dashed" style="border-color:var(--border)" data-aos="fade-up">
-            <div class="text-5xl mb-4">💬</div>
-            <h3 class="text-lg font-extrabold mb-2" style="color:var(--text)">Punya Pertanyaan Lain?</h3>
-            <p class="text-sm mb-6" style="color:var(--muted)">Kirim pertanyaan Anda di halaman Tanya Jawab dan tim kami akan segera menjawab.</p>
-            <a href="{{ route('questions.index') }}"
-               class="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80"
-               style="background:var(--primary)">
-                Ke Halaman Tanya Jawab
-            </a>
-        </div>
         @endif
 
     </div>

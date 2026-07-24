@@ -33,30 +33,6 @@ class EmailVerificationTest extends TestCase
         Notification::assertSentTo($user, VerifyEmail::class);
     }
 
-    public function test_unverified_user_cannot_submit_question(): void
-    {
-        $user = User::factory()->unverified()->create();
-
-        $response = $this->actingAs($user)->post(route('questions.store'), [
-            'question' => 'Pertanyaan dari user belum verifikasi.',
-        ]);
-
-        $response->assertRedirect(route('verification.notice'));
-        $this->assertDatabaseCount('questions', 0);
-    }
-
-    public function test_verified_user_can_submit_question(): void
-    {
-        $user = User::factory()->create();
-
-        $response = $this->actingAs($user)->post(route('questions.store'), [
-            'question' => 'Pertanyaan dari user terverifikasi.',
-        ]);
-
-        $response->assertRedirect();
-        $this->assertDatabaseCount('questions', 1);
-    }
-
     public function test_notice_redirects_already_verified_user(): void
     {
         $user = User::factory()->create();

@@ -10,7 +10,6 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ContactController;
-use App\Http\Controllers\DonationController;
 use App\Http\Controllers\DownloadController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\GalleryController;
@@ -18,7 +17,6 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProgramController;
-use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\SpmbController;
 use App\Http\Controllers\StaticPageController;
@@ -120,20 +118,6 @@ Route::get('/program/{program:slug}', [ProgramController::class, 'show'])->name(
 // Cerita Santri
 Route::get('/cerita-santri', [StoryController::class, 'index'])->name('stories.index');
 Route::get('/cerita-santri/{story:slug}', [StoryController::class, 'show'])->name('stories.show');
-
-// Donasi
-Route::middleware('feature:donasi')->group(function () {
-    Route::get('/donasi', [DonationController::class, 'index'])->name('donasi.index');
-    Route::post('/donasi', [DonationController::class, 'store'])->middleware('throttle:8,1')->name('donasi.store');
-});
-
-// Tanya Jawab
-Route::middleware('feature:pertanyaan')->group(function () {
-    Route::get('/tanya-jawab', [QuestionController::class, 'index'])->name('questions.index');
-    Route::post('/tanya-jawab', [QuestionController::class, 'store'])
-        ->middleware(['auth', 'verified', 'throttle:8,1'])
-        ->name('questions.store');
-});
 
 // Kontak
 Route::get('/kontak', [ContactController::class, 'index'])->name('contact.index');

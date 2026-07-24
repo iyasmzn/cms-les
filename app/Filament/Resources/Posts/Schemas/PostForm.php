@@ -145,18 +145,10 @@ class PostForm
                             ])
                             ->visible($canPublish),
 
-                        Grid::make(2)
-                            ->schema([
-                                Toggle::make('allow_comments')
-                                    ->label('Izinkan Komentar')
-                                    ->default(true)
-                                    ->helperText('Jika dinonaktifkan, pengunjung tidak dapat mengirim komentar pada artikel ini.'),
-
-                                Toggle::make('allow_questions')
-                                    ->label('Izinkan Pertanyaan')
-                                    ->default(true)
-                                    ->helperText('Jika dinonaktifkan, pengunjung tidak dapat mengirim pertanyaan pada artikel ini.'),
-                            ]),
+                        Toggle::make('allow_comments')
+                            ->label('Izinkan Komentar')
+                            ->default(true)
+                            ->helperText('Jika dinonaktifkan, pengunjung tidak dapat mengirim komentar pada artikel ini.'),
                     ])
                     ->description($canPublish ? null : 'Tulisan Anda akan berstatus draft dan menunggu publikasi oleh admin.'),
             ]);

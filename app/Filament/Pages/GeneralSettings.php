@@ -64,11 +64,6 @@ class GeneralSettings extends Page
 
             // Toko Buku
             'shop_whatsapp' => Setting::get('shop_whatsapp'),
-
-            // Donasi
-            'donasi_bank_name' => Setting::get('donasi_bank_name', 'Bank Syariah Indonesia (BSI)'),
-            'donasi_bank_account' => Setting::get('donasi_bank_account'),
-            'donasi_bank_holder' => Setting::get('donasi_bank_holder'),
         ]);
     }
 
@@ -244,36 +239,6 @@ class GeneralSettings extends Page
                         ->hint('Nomor internasional tanpa + (contoh: 6281234567890). Pesanan checkout akan dikirim ke nomor ini.')
                         ->helperText('Jika kosong, checkout akan mencoba menggunakan nomor WhatsApp sosial media.')
                         ->prefixIcon(Heroicon::OutlinedPhone),
-                ]),
-
-            Section::make('Donasi')
-                ->description('Informasi rekening donasi yang ditampilkan di halaman donasi dan landing page.')
-                ->icon(Heroicon::OutlinedHeart)
-                ->afterHeader([
-                    Text::make('Fitur nonaktif')
-                        ->badge()
-                        ->color('gray')
-                        ->icon(Heroicon::OutlinedEyeSlash)
-                        ->visible(fn (): bool => ! feature_enabled('donasi')),
-                ])
-                ->collapsible()
-                ->collapsed(fn (): bool => ! feature_enabled('donasi'))
-                ->persistCollapsed()
-                ->schema([
-                    TextInput::make('donasi_bank_name')
-                        ->label('Nama Bank')
-                        ->placeholder('Bank Syariah Indonesia (BSI)')
-                        ->columnSpanFull(),
-
-                    Grid::make(2)->schema([
-                        TextInput::make('donasi_bank_account')
-                            ->label('Nomor Rekening')
-                            ->placeholder('7123456789'),
-
-                        TextInput::make('donasi_bank_holder')
-                            ->label('Nama Pemilik Rekening (a.n.)')
-                            ->placeholder('Pondok Pesantren ...'),
-                    ]),
                 ]),
         ]);
     }

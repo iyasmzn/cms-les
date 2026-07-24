@@ -8,7 +8,7 @@ namespace App\Filament\Concerns;
  * the resource's own badge (if any) is used instead.
  *
  * Implementing resources must declare the feature key:
- *   protected static string $feature = 'donasi';
+ *   protected static string $feature = 'toko';
  *
  * To keep an existing badge while enabled, override the *WhenEnabled methods.
  */

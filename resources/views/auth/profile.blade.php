@@ -31,7 +31,6 @@
             @php
                 $tabs = [
                     'akun' => 'Akun',
-                    'pertanyaan' => 'Pertanyaan Saya ('.$myQuestions->count().')',
                     'komentar' => 'Komentar Saya ('.$myComments->count().')',
                 ];
             @endphp
@@ -244,49 +243,6 @@
                     </button>
                 </form>
             </div>
-        </div>
-
-        {{-- ── Tab: Pertanyaan Saya ───────────────────────────── --}}
-        <div x-show="tab === 'pertanyaan'" x-cloak class="space-y-4">
-            @forelse($myQuestions as $question)
-                <div class="bg-white rounded-2xl shadow-xl p-5 sm:p-6">
-                    <div class="flex items-center gap-2 mb-2 flex-wrap">
-                        @if($question->is_answered)
-                            <span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-200">
-                                ✓ Dijawab
-                            </span>
-                        @else
-                            <span class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-yellow-50 text-yellow-700 border border-yellow-200">
-                                Menunggu jawaban
-                            </span>
-                        @endif
-                        @if($question->is_anonymous)
-                            <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">Anonim</span>
-                        @endif
-                        @if($question->post)
-                            <a href="{{ route('blog.show', $question->post->slug) }}"
-                               class="text-[11px] font-semibold text-amber-600 hover:underline truncate max-w-[16rem]">
-                                {{ $question->post->title }}
-                            </a>
-                        @endif
-                        <span class="text-[11px] text-gray-400 ml-auto">{{ $question->created_at->diffForHumans() }}</span>
-                    </div>
-                    <p class="text-sm font-medium text-gray-800 mb-2">{{ $question->question }}</p>
-                    @if($question->answer)
-                        <div class="mt-3 pt-3 border-t border-gray-100">
-                            <p class="text-xs font-bold text-amber-700 mb-1">Jawaban {{ setting('site_name', config('app.name')) }}</p>
-                            <p class="text-sm text-gray-700 leading-relaxed">{!! nl2br(e($question->answer)) !!}</p>
-                        </div>
-                    @endif
-                </div>
-            @empty
-                <div class="bg-white rounded-2xl shadow-xl p-8 text-center">
-                    <p class="text-sm text-gray-500 mb-4">Anda belum pernah mengirim pertanyaan.</p>
-                    <a href="{{ route('questions.index') }}" class="btn-primary text-sm py-2.5 px-5 justify-center inline-flex">
-                        Ajukan Pertanyaan
-                    </a>
-                </div>
-            @endforelse
         </div>
 
         {{-- ── Tab: Komentar Saya ─────────────────────────────── --}}
