@@ -1,0 +1,205 @@
+@extends('layouts.public')
+
+@push('head')
+<style>
+    .sidebar-sticky { position: sticky; top: 5.5rem; }
+    .toc-item {
+        display: flex; align-items: flex-start; gap: .625rem;
+        padding: .35rem .5rem; border-radius: .375rem;
+        font-size: .75rem; color: #6b7280; line-height: 1.5;
+        transition: background .15s, color .15s; cursor: pointer;
+    }
+    .toc-item:hover { background: var(--primary-50); color: var(--primary-700); }
+    .toc-num { flex-shrink: 0; font-weight: 700; color: var(--primary-400); font-size: .6875rem; min-width: 1.25rem; }
+    .rel-link {
+        display: flex; align-items: center; gap: .625rem;
+        padding: .55rem .625rem; border-radius: .5rem;
+        font-size: .8125rem; color: #6b7280; line-height: 1.4;
+        transition: background .15s, color .15s;
+    }
+    .rel-link:hover { background: var(--primary-50); color: var(--primary-700); }
+</style>
+@include('partials.prose-styles')
+@include('partials.content-block-styles')
+@endpush
+
+@section('content')
+
+{{-- ── Breadcrumb ──────────────────────────────────────────── --}}
+<div class="-mt-17" style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0c1a14 100%);border-bottom:1px solid rgba(255,255,255,.08)">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-5 sm:pt-28 sm:pb-6">
+        <nav class="flex items-center gap-2 text-sm" style="color:rgba(255,255,255,.6)">
+            <a href="{{ route('home') }}" class="hover:opacity-75 transition-opacity">Beranda</a>
+            <span>/</span>
+            <a href="{{ route('programs.index') }}" class="hover:opacity-75 transition-opacity">Program</a>
+            <span>/</span>
+            <span class="font-medium line-clamp-1" style="color:#fff">{{ $program->title }}</span>
+        </nav>
+    </div>
+</div>
+
+{{-- ── Hero Image ───────────────────────────────────────────── --}}
+<div class="relative h-64 sm:h-80 lg:h-96 overflow-hidden">
+    <img src="{{ $program->thumbnail_url }}" alt="{{ $program->title }}"
+         class="w-full h-full object-cover">
+    <div class="absolute inset-0" style="background:linear-gradient(to top,rgba(0,0,0,.78),rgba(0,0,0,.2))"></div>
+    <div class="absolute bottom-0 left-0 right-0 p-6 sm:p-10">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex items-center gap-3 mb-3">
+                @if($url = icon_url($program->icon_image))
+                <img src="{{ $url }}" alt="{{ $program->title }}" class="w-10 h-10 object-contain drop-shadow">
+                @elseif($program->icon)
+                <span class="text-4xl">{{ $program->icon }}</span>
+                @endif
+                @if($program->category)
+                <span class="inline-block text-xs font-bold px-3 py-1 rounded-full"
+                      style="background:rgba(8,72,74,.85);color:#fff">{{ $program->category }}</span>
+                @endif
+            </div>
+            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-tight tracking-tight max-w-3xl">
+                {{ $program->title }}
+            </h1>
+        </div>
+    </div>
+</div>
+
+{{-- Accent bar --}}
+<div style="height:4px;background:linear-gradient(90deg,var(--primary),var(--primary-300) 50%,var(--primary-100) 100%)"></div>
+
+{{-- ── Content ──────────────────────────────────────────────── --}}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="grid lg:grid-cols-4 gap-10">
+
+        {{-- ── Main content ────────────────────────────────── --}}
+        <article class="lg:col-span-3" data-aos="fade-up" data-aos-duration="500">
+            <div class="fi-card overflow-hidden">
+                <div style="height:3px;background:linear-gradient(90deg,var(--primary),var(--primary-300) 60%,transparent)"></div>
+                <div class="p-6 sm:p-10">
+
+                    @if($program->excerpt)
+                        <p class="article-lead">{{ $program->excerpt }}</p>
+                    @endif
+
+                    @if($program->content)
+                        <div class="article-prose">
+                            {!! $program->content !!}
+                        </div>
+                    @endif
+
+                    {{-- Konten tambahan (blocks) --}}
+                    @include('partials.content-blocks', ['blocks' => $program->blocks, 'title' => $program->title])
+                </div>
+            </div>
+
+            {{-- Back --}}
+            <div class="mt-8">
+                <a href="{{ route('programs.index') }}" class="btn-outline group text-sm">
+                    <svg class="w-4 h-4 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 17l-5-5m0 0l5-5m-5 5h12"/>
+                    </svg>
+                    Semua Program
+                </a>
+            </div>
+        </article>
+
+        {{-- ── Sidebar ──────────────────────────────────────── --}}
+        <aside class="lg:col-span-1" data-aos="fade-up" data-aos-delay="100" data-aos-duration="500">
+            <div class="sidebar-sticky space-y-4">
+
+                {{-- Table of contents --}}
+                @php
+                    preg_match_all('/<h[23][^>]*>(.*?)<\/h[23]>/is', $program->content ?? '', $headings);
+                @endphp
+                @if(count($headings[1]) > 1)
+                    <div class="fi-card p-5">
+                        <div class="flex items-center gap-2 mb-3">
+                            <div class="w-5 h-5 rounded-md flex items-center justify-center" style="background:var(--primary-50)">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--primary)">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10"/>
+                                </svg>
+                            </div>
+                            <span class="text-[10px] font-bold uppercase tracking-widest" style="color:var(--primary)">Daftar Isi</span>
+                        </div>
+                        <ol class="space-y-0.5">
+                            @foreach($headings[1] as $i => $heading)
+                                <li class="toc-item">
+                                    <span class="toc-num">{{ $i + 1 }}.</span>
+                                    <span>{{ strip_tags($heading) }}</span>
+                                </li>
+                            @endforeach
+                        </ol>
+                    </div>
+                @endif
+
+                {{-- Related programs quick links --}}
+                @if($related->isNotEmpty())
+                    <div class="fi-card p-5">
+                        <div class="flex items-center gap-2 mb-3">
+                            <div class="w-5 h-5 rounded-md flex items-center justify-center" style="background:var(--primary-50)">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:var(--primary)">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/>
+                                </svg>
+                            </div>
+                            <span class="text-[10px] font-bold uppercase tracking-widest" style="color:var(--primary)">Program Lainnya</span>
+                        </div>
+                        <ul class="space-y-0.5">
+                            @foreach($related as $rel)
+                                <li>
+                                    <a href="{{ route('programs.show', $rel) }}" class="rel-link">
+                                        <span class="shrink-0">{{ $rel->icon ?: '📌' }}</span>
+                                        <span class="line-clamp-1">{{ $rel->title }}</span>
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                {{-- Back to home --}}
+                <a href="{{ route('programs.index') }}" class="btn-primary w-full justify-center text-xs group">
+                    <svg class="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/>
+                    </svg>
+                    Jelajahi Program
+                </a>
+            </div>
+        </aside>
+
+    </div>
+</div>
+
+{{-- ── Related ──────────────────────────────────────────────── --}}
+@if($related->isNotEmpty())
+<section class="border-t py-14" style="border-color:#f3f4f6;background:var(--bg-alt)">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center gap-2 mb-8">
+            <span class="w-4 h-px inline-block" style="background:var(--primary)"></span>
+            <h2 class="text-xl font-extrabold" style="color:var(--text)">Program Lainnya</h2>
+        </div>
+        <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            @foreach($related as $rel)
+            <a href="{{ route('programs.show', $rel) }}"
+               class="fi-card fi-card-hover group flex flex-col overflow-hidden"
+               data-aos="fade-up" data-aos-delay="{{ $loop->index * 60 }}">
+                <div class="relative h-44 overflow-hidden">
+                    <img src="{{ $rel->thumbnail_url }}" alt="{{ $rel->title }}"
+                         loading="lazy"
+                         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                    @if($rel->icon)
+                    <div class="absolute bottom-3 left-3 text-2xl">{{ $rel->icon }}</div>
+                    @endif
+                </div>
+                <div class="p-5">
+                    <h3 class="font-bold text-sm line-clamp-2" style="color:var(--text)">{{ $rel->title }}</h3>
+                    @if($rel->excerpt)
+                    <p class="text-xs mt-1.5 line-clamp-2" style="color:var(--muted)">{{ $rel->excerpt }}</p>
+                    @endif
+                </div>
+            </a>
+            @endforeach
+        </div>
+    </div>
+</section>
+@endif
+
+@endsection

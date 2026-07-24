@@ -1,0 +1,3 @@
+- [ ] Ganti landing page pada `resources/views/welcome.blade.php` dengan desain Modern Clean (hero + feature grid + CTA)
+- [ ] Pastikan tombol auth (Log in/Register/Dashboard) tetap mengikuti logic `Route::has('login')` dan `@auth`
+- [ ] Jalankan pengecekan cepat: `php artisan view:clear` dan pastikan route `/` menampilkan halaman baru
