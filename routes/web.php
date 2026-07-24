@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Auth\AuthorRequestController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\LoginController;
@@ -83,9 +82,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/profil', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profil', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profil/kata-sandi', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
-
-    Route::get('/jadi-author', [AuthorRequestController::class, 'show'])->name('author-request.show');
-    Route::post('/jadi-author', [AuthorRequestController::class, 'store'])->name('author-request.store');
 });
 
 // Produk & Keranjang (Toko)
