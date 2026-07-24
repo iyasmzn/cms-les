@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Teacher extends Model
 {
@@ -35,6 +36,16 @@ class Teacher extends Model
     public function institution(): BelongsTo
     {
         return $this->belongsTo(Institution::class);
+    }
+
+    /**
+     * Groups (kelompok) this teacher coaches.
+     *
+     * @return HasMany<Group, $this>
+     */
+    public function groups(): HasMany
+    {
+        return $this->hasMany(Group::class);
     }
 
     /**

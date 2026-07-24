@@ -3,6 +3,7 @@
 namespace Tests\Feature\Filament;
 
 use App\Filament\Pages\LandingPageSettings;
+use App\Models\Institution;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -69,6 +70,46 @@ class LandingPageSettingsTest extends TestCase
         $this->assertSame('Program Kami', Setting::get('section_programs_eyebrow'));
         $this->assertSame('Program Andalan Pesantren', Setting::get('section_programs_title'));
         $this->assertSame('Deskripsi program yang sudah diubah.', Setting::get('section_programs_subtitle'));
+    }
+
+    public function test_it_persists_courses_section_content(): void
+    {
+        $admin = User::factory()->create()->assignRole('super_admin');
+
+        Livewire::actingAs($admin)
+            ->test(LandingPageSettings::class)
+            ->fillForm([
+                'section_courses_eyebrow' => 'Les Kami',
+                'section_courses_title' => 'Swimming & More',
+                'section_courses_subtitle' => 'Pick a group and register online.',
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame('Les Kami', Setting::get('section_courses_eyebrow'));
+        $this->assertSame('Swimming & More', Setting::get('section_courses_title'));
+        $this->assertSame('Pick a group and register online.', Setting::get('section_courses_subtitle'));
+    }
+
+    public function test_courses_toggle_controls_homepage_visibility(): void
+    {
+        $course = Institution::factory()->create([
+            'has_groups' => true,
+            'is_active' => true,
+            'name' => 'Swimming Course',
+        ]);
+
+        // Visible by default.
+        $this->get('/')->assertSee('Our Courses');
+
+        // Hidden once the section is toggled off.
+        Setting::set('section_order', json_encode([
+            ['key' => 'section_courses', 'visible' => false],
+        ]));
+
+        $response = $this->get('/');
+        $response->assertDontSee('Our Courses');
+        $response->assertDontSee($course->name);
     }
 
     public function test_it_keeps_section_order_and_visibility_when_saving_content(): void

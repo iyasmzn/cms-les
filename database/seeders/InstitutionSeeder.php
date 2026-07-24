@@ -40,12 +40,22 @@ class InstitutionSeeder extends Seeder
                 'description' => 'Jenjang pendidikan menengah atas untuk kelas 10 hingga 12.',
                 'sort_order' => 3,
             ],
+            [
+                'slug' => 'swimming',
+                'name' => 'Swimming Course',
+                'short_name' => 'SWIM',
+                'icon' => '🏊',
+                'color' => 'info',
+                'description' => 'Swimming lessons (les renang) for all ages, organised into skill-based groups.',
+                'sort_order' => 4,
+                'has_groups' => true,
+            ],
         ];
 
         foreach ($institutions as $institution) {
             Institution::updateOrCreate(
                 ['slug' => $institution['slug']],
-                array_merge($institution, ['is_active' => true]),
+                array_merge(['has_groups' => false], $institution, ['is_active' => true]),
             );
         }
     }

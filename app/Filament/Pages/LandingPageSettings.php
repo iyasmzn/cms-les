@@ -45,6 +45,7 @@ class LandingPageSettings extends Page
             ['key' => 'section_principal',   'label' => '👨‍💼  Sambutan Para Tokoh',     'visible' => true],
             ['key' => 'section_spmb_steps',  'label' => '📝  Tahapan SPMB',             'visible' => true],
             ['key' => 'section_programs',    'label' => '🎓  Program Unggulan',          'visible' => true],
+            ['key' => 'section_courses',     'label' => '🏊  Courses / Les',             'visible' => true],
             ['key' => 'section_events',      'label' => '📅  Agenda Kegiatan',           'visible' => true],
             ['key' => 'section_products',    'label' => '🛍️  Produk Toko',              'visible' => true],
             ['key' => 'section_gallery',     'label' => '🖼️  Galeri Foto',              'visible' => true],
@@ -70,6 +71,13 @@ class LandingPageSettings extends Page
                 'eyebrow' => 'Keunggulan Kami',
                 'title' => 'Program Unggulan',
                 'subtitle' => 'Berbagai program yang dirancang untuk membentuk santri berprestasi dan berakhlak mulia.',
+            ],
+            'courses' => [
+                'label' => 'Courses / Les',
+                'icon' => Heroicon::OutlinedRectangleStack,
+                'eyebrow' => 'Courses',
+                'title' => 'Our Courses',
+                'subtitle' => 'Join one of our courses (les) — each organised into skill-based groups with its own schedule and coach.',
             ],
             'events' => [
                 'label' => 'Agenda Kegiatan',

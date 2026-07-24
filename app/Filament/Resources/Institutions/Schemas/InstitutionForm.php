@@ -105,6 +105,13 @@ class InstitutionForm
                             ->offColor('danger')
                             ->helperText('Nonaktifkan untuk menyembunyikan jenjang dari halaman PPDB publik.'),
                     ]),
+
+                    Toggle::make('has_groups')
+                        ->label('Course institution (has groups)')
+                        ->default(false)
+                        ->onColor('success')
+                        ->helperText('Enable to run this institution as a course (les) with groups (kelompok). Adds the Groups manager and lists it on the public /courses page.')
+                        ->columnSpanFull(),
                 ]),
 
             Section::make('Mode Formulir Pendaftaran')

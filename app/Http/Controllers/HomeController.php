@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use App\Models\Greeting;
+use App\Models\Institution;
 use App\Models\Media;
 use App\Models\Post;
 use App\Models\Product;
@@ -47,10 +48,18 @@ class HomeController extends Controller
 
         $galleryMedia = Media::inGallery()->limit(6)->get();
 
+        $courses = Institution::query()
+            ->active()
+            ->where('has_groups', true)
+            ->withCount(['groups' => fn ($query) => $query->where('is_active', true)])
+            ->ordered()
+            ->limit(6)
+            ->get();
+
         return view('welcome', compact(
             'posts', 'stats', 'slides', 'greetings', 'testimonials', 'contactItems',
             'upcomingEvents', 'programs', 'featuredProducts',
-            'galleryMedia',
+            'galleryMedia', 'courses',
         ));
     }
 }

@@ -9,6 +9,7 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DownloadController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\GalleryController;
@@ -109,6 +110,17 @@ Route::get('/kegiatan/{event:slug}', [EventController::class, 'show'])->name('ev
 // Program
 Route::get('/program', [ProgramController::class, 'index'])->name('programs.index');
 Route::get('/program/{program:slug}', [ProgramController::class, 'show'])->name('programs.show');
+
+// Courses / Les (institutions with groups)
+Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
+Route::get('/courses/{institution:slug}', [CourseController::class, 'show'])->name('courses.show');
+Route::get('/courses/{institution:slug}/{group:slug}/register', [CourseController::class, 'registerForm'])
+    ->scopeBindings()
+    ->name('courses.register');
+Route::post('/courses/{institution:slug}/{group:slug}/register', [CourseController::class, 'register'])
+    ->scopeBindings()
+    ->middleware('throttle:8,1')
+    ->name('courses.register.store');
 
 // Kontak
 Route::get('/kontak', [ContactController::class, 'index'])->name('contact.index');

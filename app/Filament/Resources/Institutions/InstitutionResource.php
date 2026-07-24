@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Institutions;
 use App\Filament\Resources\Institutions\Pages\CreateInstitution;
 use App\Filament\Resources\Institutions\Pages\EditInstitution;
 use App\Filament\Resources\Institutions\Pages\ListInstitutions;
+use App\Filament\Resources\Institutions\RelationManagers\GroupsRelationManager;
 use App\Filament\Resources\Institutions\RelationManagers\PpdbFieldsRelationManager;
 use App\Filament\Resources\Institutions\Schemas\InstitutionForm;
 use App\Filament\Resources\Institutions\Tables\InstitutionsTable;
@@ -44,6 +45,7 @@ class InstitutionResource extends Resource
     {
         return [
             PpdbFieldsRelationManager::class,
+            GroupsRelationManager::class,
         ];
     }
 

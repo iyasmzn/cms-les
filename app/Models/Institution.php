@@ -32,6 +32,7 @@ class Institution extends Model
         'address',
         'sort_order',
         'is_active',
+        'has_groups',
         'form_mode',
         'external_url',
         'embed_url',
@@ -45,6 +46,7 @@ class Institution extends Model
     protected $casts = [
         'sort_order' => 'integer',
         'is_active' => 'boolean',
+        'has_groups' => 'boolean',
         'procedures' => 'array',
         'fees' => 'array',
     ];
@@ -53,6 +55,16 @@ class Institution extends Model
     public function teachers(): HasMany
     {
         return $this->hasMany(Teacher::class);
+    }
+
+    /**
+     * Groups (kelompok) belonging to this course institution.
+     *
+     * @return HasMany<Group, $this>
+     */
+    public function groups(): HasMany
+    {
+        return $this->hasMany(Group::class);
     }
 
     /** @return HasMany<RegistrationWave, $this> */
