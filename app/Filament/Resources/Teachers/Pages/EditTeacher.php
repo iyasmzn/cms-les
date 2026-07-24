@@ -2,14 +2,14 @@
 
 namespace App\Filament\Resources\Teachers\Pages;
 
-use App\Filament\Concerns\SyncsPhotoToMediaLibrary;
+use App\Filament\Concerns\InteractsWithImagePicker;
 use App\Filament\Resources\Teachers\TeacherResource;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 
 class EditTeacher extends EditRecord
 {
-    use SyncsPhotoToMediaLibrary;
+    use InteractsWithImagePicker;
 
     protected static string $resource = TeacherResource::class;
 
@@ -19,7 +19,7 @@ class EditTeacher extends EditRecord
      */
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        return $this->syncPhotoToMediaLibrary($data);
+        return self::applyImagePickers($data, ['photo']);
     }
 
     protected function getHeaderActions(): array

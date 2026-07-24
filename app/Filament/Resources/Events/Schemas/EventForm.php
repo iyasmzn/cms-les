@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\Events\Schemas;
 
+use App\Filament\Concerns\InteractsWithImagePicker;
 use App\Filament\Schemas\ContentBlocks;
 use App\Models\Category;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -19,6 +19,8 @@ use Illuminate\Support\Str;
 
 class EventForm
 {
+    use InteractsWithImagePicker;
+
     public static function configure(Schema $schema): Schema
     {
         return $schema
@@ -60,17 +62,16 @@ class EventForm
 
                 Section::make('Gambar & Kategori')
                     ->schema([
-                        FileUpload::make('image')
-                            ->label('Gambar Kegiatan')
-                            ->image()
-                            ->disk('public')
-                            ->directory('events/images')
-                            ->visibility('public')
-                            ->automaticallyCropImagesToAspectRatio('16:9')
-                            ->automaticallyResizeImagesMode('cover')
-                            ->automaticallyResizeImagesToWidth('1200')
-                            ->automaticallyResizeImagesToHeight('675')
-                            ->columnSpanFull(),
+                        self::imagePicker(
+                            key: 'image',
+                            label: 'Gambar Kegiatan',
+                            hint: 'Rasio 16:9. Akan di-resize ke 1200×675.',
+                            accepted: ['image/jpeg', 'image/png', 'image/webp'],
+                            width: 1200,
+                            height: 675,
+                            directory: 'events/images',
+                            aspectRatio: '16:9',
+                        )->columnSpanFull(),
 
                         Select::make('category')
                             ->label('Kategori')

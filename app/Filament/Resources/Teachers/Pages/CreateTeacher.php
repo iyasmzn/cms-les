@@ -2,13 +2,13 @@
 
 namespace App\Filament\Resources\Teachers\Pages;
 
-use App\Filament\Concerns\SyncsPhotoToMediaLibrary;
+use App\Filament\Concerns\InteractsWithImagePicker;
 use App\Filament\Resources\Teachers\TeacherResource;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateTeacher extends CreateRecord
 {
-    use SyncsPhotoToMediaLibrary;
+    use InteractsWithImagePicker;
 
     protected static string $resource = TeacherResource::class;
 
@@ -18,6 +18,6 @@ class CreateTeacher extends CreateRecord
      */
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        return $this->syncPhotoToMediaLibrary($data);
+        return self::applyImagePickers($data, ['photo']);
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Testimonials\Schemas;
 
-use Filament\Forms\Components\FileUpload;
+use App\Filament\Concerns\InteractsWithImagePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -12,6 +12,8 @@ use Filament\Schemas\Schema;
 
 class TestimonialForm
 {
+    use InteractsWithImagePicker;
+
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
@@ -37,18 +39,16 @@ class TestimonialForm
                             ->placeholder('2023'),
                     ]),
 
-                    FileUpload::make('photo')
-                        ->label('Foto')
-                        ->image()
-                        ->disk('public')
-                        ->directory('testimonials')
-                        ->visibility('public')
-                        ->automaticallyCropImagesToAspectRatio('1:1')
-                        ->automaticallyResizeImagesMode('cover')
-                        ->automaticallyResizeImagesToWidth('300')
-                        ->automaticallyResizeImagesToHeight('300')
-                        ->hint('Opsional. Akan di-crop menjadi persegi 300×300px.')
-                        ->columnSpanFull(),
+                    self::imagePicker(
+                        key: 'photo',
+                        label: 'Foto',
+                        hint: 'Opsional. Akan di-crop menjadi persegi 300×300px.',
+                        accepted: ['image/jpeg', 'image/png', 'image/webp'],
+                        width: 300,
+                        height: 300,
+                        directory: 'testimonials',
+                        aspectRatio: '1:1',
+                    )->columnSpanFull(),
                 ]),
 
             Section::make('Kesan & Pesan')

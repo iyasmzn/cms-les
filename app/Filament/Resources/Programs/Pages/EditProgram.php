@@ -19,6 +19,8 @@ class EditProgram extends EditRecord
      */
     protected function mutateFormDataBeforeSave(array $data): array
     {
+        $data = self::applyImagePickers($data, ['image']);
+
         $data['blocks'] = self::applyBlockImagePickers(
             $data['blocks'] ?? [],
             self::imageBaseName($data['title'] ?? null, 'Program'),

@@ -18,6 +18,8 @@ class CreateEvent extends CreateRecord
      */
     protected function mutateFormDataBeforeCreate(array $data): array
     {
+        $data = self::applyImagePickers($data, ['image']);
+
         $data['blocks'] = self::applyBlockImagePickers(
             $data['blocks'] ?? [],
             self::imageBaseName($data['title'] ?? null, 'Kegiatan'),

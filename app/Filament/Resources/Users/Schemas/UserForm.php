@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
+use App\Filament\Concerns\InteractsWithImagePicker;
 use App\Models\User;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -16,23 +16,25 @@ use Spatie\Permission\Models\Role;
 
 class UserForm
 {
+    use InteractsWithImagePicker;
+
     public static function configure(Schema $schema): Schema
     {
         return $schema
             ->components([
                 Section::make('Informasi Akun')
                     ->schema([
-                        FileUpload::make('avatar')
-                            ->label('Foto Profil')
-                            ->image()
-                            ->disk('public')
-                            ->directory('avatars')
-                            ->visibility('public')
-                            ->avatar()
-                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
-                            ->maxSize(8192)
-                            ->helperText('JPG, PNG, WEBP, atau GIF. Maks 8MB.')
-                            ->columnSpanFull(),
+                        self::imagePicker(
+                            key: 'avatar',
+                            label: 'Foto Profil',
+                            hint: 'JPG, PNG, atau WEBP. Akan di-crop persegi 400×400.',
+                            accepted: ['image/jpeg', 'image/png', 'image/webp'],
+                            width: 400,
+                            height: 400,
+                            directory: 'avatars',
+                            aspectRatio: '1:1',
+                            withMeta: false,
+                        )->columnSpanFull(),
 
                         Grid::make(2)->schema([
                             TextInput::make('name')

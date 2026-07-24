@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources\Teachers\Schemas;
 
+use App\Filament\Concerns\InteractsWithImagePicker;
 use App\Models\Category;
 use App\Models\Teacher;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -14,6 +14,8 @@ use Filament\Schemas\Schema;
 
 class TeacherForm
 {
+    use InteractsWithImagePicker;
+
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
@@ -33,18 +35,16 @@ class TeacherForm
                             ->hint('Nomor Induk Pegawai (kosongkan jika tidak ada).'),
                     ]),
 
-                    FileUpload::make('photo')
-                        ->label('Foto')
-                        ->image()
-                        ->disk('public')
-                        ->directory('teachers')
-                        ->visibility('public')
-                        ->automaticallyCropImagesToAspectRatio('3:4')
-                        ->automaticallyResizeImagesMode('cover')
-                        ->automaticallyResizeImagesToWidth('300')
-                        ->automaticallyResizeImagesToHeight('400')
-                        ->hint('Rasio 3:4 (potret). Akan di-resize ke 300×400px.')
-                        ->columnSpanFull(),
+                    self::imagePicker(
+                        key: 'photo',
+                        label: 'Foto',
+                        hint: 'Rasio 3:4 (potret). Akan di-resize ke 300×400px.',
+                        accepted: ['image/jpeg', 'image/png', 'image/webp'],
+                        width: 300,
+                        height: 400,
+                        directory: 'teachers',
+                        aspectRatio: '3:4',
+                    )->columnSpanFull(),
                 ]),
 
             Section::make('Jabatan & Bidang Studi')

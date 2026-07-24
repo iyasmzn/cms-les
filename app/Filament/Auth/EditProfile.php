@@ -2,9 +2,9 @@
 
 namespace App\Filament\Auth;
 
+use App\Filament\Concerns\InteractsWithImagePicker;
 use App\Models\User;
 use Filament\Auth\Pages\EditProfile as BaseEditProfile;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Grid;
@@ -16,9 +16,24 @@ use Illuminate\Support\HtmlString;
 
 class EditProfile extends BaseEditProfile
 {
+    use InteractsWithImagePicker;
+
     public function getMaxWidth(): Width
     {
         return Width::SixExtraLarge;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        return self::applyImagePickers(
+            $data,
+            ['avatar'],
+            self::imageBaseName($data['name'] ?? $this->getUser()->name, 'Avatar'),
+        );
     }
 
     public function form(Schema $schema): Schema
@@ -62,16 +77,17 @@ class EditProfile extends BaseEditProfile
 
     protected function getAvatarFormComponent(): Component
     {
-        return FileUpload::make('avatar')
-            ->label('Foto Profil')
-            ->image()
-            ->avatar()
-            ->disk('public')
-            ->directory('avatars')
-            ->visibility('public')
-            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
-            ->maxSize(8192)
-            ->helperText('JPG, PNG, WEBP, atau GIF. Maks 8MB.');
+        return self::imagePicker(
+            key: 'avatar',
+            label: 'Foto Profil',
+            hint: 'JPG, PNG, atau WEBP. Akan di-crop persegi 400×400.',
+            accepted: ['image/jpeg', 'image/png', 'image/webp'],
+            width: 400,
+            height: 400,
+            directory: 'avatars',
+            aspectRatio: '1:1',
+            withMeta: false,
+        );
     }
 
     protected function getRolesPlaceholder(): Placeholder

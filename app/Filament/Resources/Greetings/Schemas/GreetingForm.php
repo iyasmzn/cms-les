@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Greetings\Schemas;
 
+use App\Filament\Concerns\InteractsWithImagePicker;
 use App\Models\StaticPage;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -14,6 +14,8 @@ use Filament\Schemas\Schema;
 
 class GreetingForm
 {
+    use InteractsWithImagePicker;
+
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
@@ -39,16 +41,15 @@ class GreetingForm
                         ->placeholder('Kepala Sekolah, Kepala Yayasan, Ketua Komite, ...')
                         ->columnSpanFull(),
 
-                    FileUpload::make('photo')
-                        ->label('Foto')
-                        ->image()
-                        ->disk('public')
-                        ->directory('greetings')
-                        ->visibility('public')
-                        ->automaticallyResizeImagesToWidth('600')
-                        ->automaticallyResizeImagesToHeight('700')
-                        ->hint('Foto formal, rasio portrait 3:4 disarankan.')
-                        ->columnSpanFull(),
+                    self::imagePicker(
+                        key: 'photo',
+                        label: 'Foto',
+                        hint: 'Foto formal, rasio portrait 3:4 disarankan. Akan di-resize ke 600×700.',
+                        accepted: ['image/jpeg', 'image/png', 'image/webp'],
+                        width: 600,
+                        height: 700,
+                        directory: 'greetings',
+                    )->columnSpanFull(),
                 ]),
 
             Section::make('Sambutan')

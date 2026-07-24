@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Popups\Schemas;
 
+use App\Filament\Concerns\InteractsWithImagePicker;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -14,6 +14,8 @@ use Filament\Schemas\Schema;
 
 class PopupForm
 {
+    use InteractsWithImagePicker;
+
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
@@ -27,14 +29,14 @@ class PopupForm
                         ->hint('Jika diisi, video YouTube ditampilkan di atas popup (menggantikan gambar).')
                         ->columnSpanFull(),
 
-                    FileUpload::make('image')
-                        ->label('Gambar')
-                        ->image()
-                        ->disk('public')
-                        ->directory('popups')
-                        ->visibility('public')
-                        ->hint('Diabaikan jika URL YouTube diisi.')
-                        ->columnSpanFull(),
+                    self::imagePicker(
+                        key: 'image',
+                        label: 'Gambar',
+                        hint: 'Diabaikan jika URL YouTube diisi. Akan di-resize ke lebar 1200px.',
+                        accepted: ['image/jpeg', 'image/png', 'image/webp'],
+                        width: 1200,
+                        directory: 'popups',
+                    )->columnSpanFull(),
 
                     TextInput::make('title')
                         ->label('Judul')

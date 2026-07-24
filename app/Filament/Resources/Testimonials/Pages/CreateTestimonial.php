@@ -2,13 +2,13 @@
 
 namespace App\Filament\Resources\Testimonials\Pages;
 
-use App\Filament\Concerns\SyncsPhotoToMediaLibrary;
+use App\Filament\Concerns\InteractsWithImagePicker;
 use App\Filament\Resources\Testimonials\TestimonialResource;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateTestimonial extends CreateRecord
 {
-    use SyncsPhotoToMediaLibrary;
+    use InteractsWithImagePicker;
 
     protected static string $resource = TestimonialResource::class;
 
@@ -18,6 +18,6 @@ class CreateTestimonial extends CreateRecord
      */
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        return $this->syncPhotoToMediaLibrary($data);
+        return self::applyImagePickers($data, ['photo']);
     }
 }
