@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Concerns\ProtectsAgainstSpam;
 use App\Models\Group;
 use App\Models\GroupMember;
+use App\Models\GroupSession;
 use App\Models\Institution;
 use App\Models\User;
+use App\Support\CalendarMonth;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
@@ -90,6 +92,59 @@ class CourseController extends Controller
     }
 
     /**
+     * The logged-in member's own course registrations, newest first.
+     */
+    public function mine(Request $request): View
+    {
+        $registrations = $request->user()->courseRegistrations()
+            ->with(['group' => fn ($query) => $query->with('institution', 'teacher'), 'payments'])
+            ->latest()
+            ->get();
+
+        $siteName = setting('site_name', config('app.name'));
+
+        $seo = [
+            'title' => "My Courses | {$siteName}",
+            'description' => 'Your course registrations, schedule, and status.',
+            'robots' => 'noindex, nofollow',
+        ];
+
+        return view('courses.mine', compact('registrations', 'seo'));
+    }
+
+    /**
+     * A month calendar of the logged-in member's course sessions.
+     */
+    public function calendar(Request $request): View
+    {
+        $calendar = CalendarMonth::fromString($request->query('month'));
+
+        $groupIds = $request->user()->courseRegistrations()
+            ->whereIn('status', ['pending', 'active'])
+            ->pluck('group_id')
+            ->unique();
+
+        $sessions = GroupSession::query()
+            ->whereIn('group_id', $groupIds)
+            ->whereBetween('date', [$calendar->rangeStart()->toDateString(), $calendar->rangeEnd()->toDateString()])
+            ->where('status', '!=', 'cancelled')
+            ->with('group.institution')
+            ->ordered()
+            ->get()
+            ->groupBy(fn (GroupSession $session): string => $session->date->toDateString());
+
+        $siteName = setting('site_name', config('app.name'));
+
+        $seo = [
+            'title' => "My Schedule | {$siteName}",
+            'description' => 'Your course session calendar.',
+            'robots' => 'noindex, nofollow',
+        ];
+
+        return view('courses.calendar', compact('calendar', 'sessions', 'seo'));
+    }
+
+    /**
      * Store a new group member from the public registration form.
      */
     public function register(Request $request, Institution $institution, Group $group): RedirectResponse
@@ -125,13 +180,25 @@ class CourseController extends Controller
         ]);
 
         $data['status'] = 'pending';
+        $data['user_id'] = $request->user()?->id;
 
         $member = $group->members()->create($data);
 
         $this->notifyAdmins($member, $group, $institution);
 
-        return redirect()->route('courses.show', $institution)
+        $redirect = redirect()->route('courses.show', $institution)
             ->with('success', 'Registration submitted! We will contact you shortly to confirm your spot.');
+
+        // Invite guests to create an account so they can track this registration
+        // under "My Courses". Logged-in members are already linked automatically.
+        if (! $request->user()) {
+            $redirect->with('offer_account', [
+                'name' => $data['full_name'],
+                'email' => $data['email'] ?? null,
+            ]);
+        }
+
+        return $redirect;
     }
 
     /**

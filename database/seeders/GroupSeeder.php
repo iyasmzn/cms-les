@@ -3,74 +3,72 @@
 namespace Database\Seeders;
 
 use App\Models\Group;
+use App\Models\GroupMember;
 use App\Models\Institution;
 use App\Models\Teacher;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class GroupSeeder extends Seeder
 {
     /**
-     * Seed sample groups (kelompok) for course institutions (les).
+     * Seed groups (kelompok) for every course, together with sample members,
+     * dated sessions, and payments so the calendar, My Courses, and payment
+     * tracking all have data out of the box.
      */
     public function run(): void
     {
-        $course = Institution::where('slug', 'swimming')->first();
+        /** @var Collection<int, Teacher> $coaches */
+        $coaches = Teacher::all();
 
-        if ($course === null) {
-            return;
-        }
-
-        $coach = Teacher::where('institution_id', $course->id)->first()
-            ?? Teacher::first();
-
-        $groups = [
-            [
-                'slug' => 'beginner-a',
-                'name' => 'Beginner A',
-                'level' => 'Beginner',
-                'days' => ['mon', 'wed'],
-                'start_time' => '16:00',
-                'end_time' => '17:30',
-                'location' => 'Main Pool',
-                'capacity' => 10,
-                'description' => 'Water confidence, floating, and basic strokes for new swimmers.',
-                'sort_order' => 1,
-            ],
-            [
-                'slug' => 'intermediate-b',
-                'name' => 'Intermediate B',
-                'level' => 'Intermediate',
-                'days' => ['tue', 'thu'],
-                'start_time' => '15:00',
-                'end_time' => '16:30',
-                'location' => 'Main Pool',
-                'capacity' => 8,
-                'description' => 'Stroke refinement (freestyle, backstroke) and endurance building.',
-                'sort_order' => 2,
-            ],
-            [
-                'slug' => 'advanced-c',
-                'name' => 'Advanced C',
-                'level' => 'Advanced',
-                'days' => ['sat'],
-                'start_time' => '08:00',
-                'end_time' => '10:00',
-                'location' => 'Olympic Pool',
-                'capacity' => 6,
-                'description' => 'Competitive technique, all four strokes, and race preparation.',
-                'sort_order' => 3,
-            ],
+        $templates = [
+            ['name' => 'Kelompok Pemula', 'level' => 'Pemula', 'days' => ['mon', 'wed'], 'start' => '16:00', 'end' => '17:30', 'capacity' => 10],
+            ['name' => 'Kelompok Lanjutan', 'level' => 'Lanjutan', 'days' => ['tue', 'thu'], 'start' => '15:30', 'end' => '17:00', 'capacity' => 8],
         ];
 
-        foreach ($groups as $group) {
-            Group::updateOrCreate(
-                ['institution_id' => $course->id, 'slug' => $group['slug']],
-                array_merge($group, [
-                    'institution_id' => $course->id,
-                    'teacher_id' => $coach?->id,
-                    'is_active' => true,
-                ]),
-            );
-        }
+        Institution::query()->where('has_groups', true)->get()->each(function (Institution $course) use ($coaches, $templates): void {
+            foreach ($templates as $index => $template) {
+                $group = Group::updateOrCreate(
+                    ['institution_id' => $course->id, 'slug' => Str::slug($template['name'])],
+                    [
+                        'teacher_id' => $coaches->isNotEmpty() ? $coaches->random()->id : null,
+                        'name' => $template['name'],
+                        'level' => $template['level'],
+                        'days' => $template['days'],
+                        'start_time' => $template['start'],
+                        'end_time' => $template['end'],
+                        'location' => $course->name,
+                        'capacity' => $template['capacity'],
+                        'description' => "Kelompok {$template['level']} untuk {$course->name}.",
+                        'is_active' => true,
+                        'sort_order' => $index + 1,
+                    ],
+                );
+
+                // Only populate sample data once, so re-seeding stays clean.
+                if ($group->members()->exists()) {
+                    continue;
+                }
+
+                GroupMember::factory()->count(5)->active()->create(['group_id' => $group->id]);
+                GroupMember::factory()->count(2)->create(['group_id' => $group->id, 'status' => 'pending']);
+
+                // Dated sessions for this and next month, each with a fee.
+                $group->generateSessions(now()->startOfMonth(), now()->addMonth()->endOfMonth(), 50000);
+
+                // Bill active members for past sessions; mark most as paid.
+                $group->sessions()->whereDate('date', '<=', now())->orderBy('date')->get()
+                    ->each(function ($session): void {
+                        $session->billActiveMembers();
+
+                        $session->payments()->get()->each(function ($payment, int $idx): void {
+                            if ($idx % 4 !== 0) {
+                                $payment->markPaid('cash');
+                            }
+                        });
+                    });
+            }
+        });
     }
 }

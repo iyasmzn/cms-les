@@ -10,6 +10,7 @@ use App\Filament\Widgets\RegistrationsPerInstitutionChart;
 use App\Filament\Widgets\RegistrationsPerPathChart;
 use App\Filament\Widgets\RegistrationsPerWaveChart;
 use App\Filament\Widgets\RegistrationsPerYearStats;
+use App\Filament\Widgets\SessionsCalendarWidget;
 use App\Filament\Widgets\SpmbRegistrationsChartWidget;
 use App\Filament\Widgets\StatsOverviewWidget;
 use BackedEnum;
@@ -42,6 +43,7 @@ class Dashboard extends BaseDashboard
             RegistrationsPerPathChart::class,
             RegistrationsPerWaveChart::class,
             SpmbRegistrationsChartWidget::class,
+            SessionsCalendarWidget::class,
             LatestSpmbRegistrationsWidget::class,
             LatestCommentsWidget::class,
         ];

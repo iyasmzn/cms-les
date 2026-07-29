@@ -68,7 +68,7 @@
         <div>
             <label for="full_name" class="course-label">Full Name <span class="text-red-500">*</span></label>
             <input type="text" id="full_name" name="full_name" class="course-input @error('full_name') border-red-400 @enderror"
-                   value="{{ old('full_name') }}" placeholder="Participant's full name" required>
+                   value="{{ old('full_name', auth()->user()?->name) }}" placeholder="Participant's full name" required>
             @error('full_name')<p class="course-hint text-red-500 mt-1">{{ $message }}</p>@enderror
         </div>
 
@@ -108,7 +108,7 @@
         <div>
             <label for="email" class="course-label">Email</label>
             <input type="email" id="email" name="email" class="course-input @error('email') border-red-400 @enderror"
-                   value="{{ old('email') }}" placeholder="name@email.com">
+                   value="{{ old('email', auth()->user()?->email) }}" placeholder="name@email.com">
             @error('email')<p class="course-hint text-red-500 mt-1">{{ $message }}</p>@enderror
         </div>
 

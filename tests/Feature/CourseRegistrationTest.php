@@ -2,11 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Models\CoursePayment;
 use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\Institution;
+use App\Models\Setting;
 use App\Models\User;
+use App\Notifications\CourseRegistrationStatusUpdated;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
@@ -91,6 +96,31 @@ class CourseRegistrationTest extends TestCase
 
         $member = GroupMember::first();
         $this->assertNotNull($member->registration_number);
+    }
+
+    public function test_guest_registration_offers_account_creation(): void
+    {
+        $this->followingRedirects()
+            ->post(route('courses.register.store', [$this->course, $this->group]), [
+                'full_name' => 'Guest Wants Account',
+                'phone' => '08123123123',
+                'email' => 'guest@example.com',
+            ])
+            ->assertStatus(200)
+            ->assertSee('Create an account');
+    }
+
+    public function test_logged_in_registration_does_not_offer_account_creation(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->followingRedirects()
+            ->post(route('courses.register.store', [$this->course, $this->group]), [
+                'full_name' => 'Already A Member',
+                'phone' => '08129999999',
+            ])
+            ->assertStatus(200)
+            ->assertDontSee('Create an account');
     }
 
     public function test_registration_requires_name_and_phone(): void
@@ -189,5 +219,147 @@ class CourseRegistrationTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Our Courses');
         $response->assertSee($this->course->name);
+    }
+
+    public function test_registration_is_linked_to_the_logged_in_user(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('courses.register.store', [$this->course, $this->group]), [
+            'full_name' => 'Logged In Registrant',
+            'phone' => '08111111111',
+        ]);
+
+        $this->assertDatabaseHas('group_members', [
+            'full_name' => 'Logged In Registrant',
+            'user_id' => $user->id,
+        ]);
+    }
+
+    public function test_guest_registration_is_not_linked_to_any_user(): void
+    {
+        $this->post(route('courses.register.store', [$this->course, $this->group]), [
+            'full_name' => 'Guest Registrant',
+            'phone' => '08222222222',
+        ]);
+
+        $this->assertDatabaseHas('group_members', [
+            'full_name' => 'Guest Registrant',
+            'user_id' => null,
+        ]);
+    }
+
+    public function test_logging_in_claims_matching_guest_registrations(): void
+    {
+        $user = User::factory()->create(['email' => 'claim@example.com']);
+
+        $mine = GroupMember::factory()->create([
+            'group_id' => $this->group->id,
+            'user_id' => null,
+            'email' => 'claim@example.com',
+        ]);
+        $other = GroupMember::factory()->create([
+            'group_id' => $this->group->id,
+            'user_id' => null,
+            'email' => 'someone.else@example.com',
+        ]);
+
+        event(new Login('web', $user, false));
+
+        $this->assertSame($user->id, $mine->fresh()->user_id);
+        $this->assertNull($other->fresh()->user_id);
+    }
+
+    public function test_logging_in_claims_registrations_matching_phone(): void
+    {
+        $user = User::factory()->create(['email' => 'a@example.com', 'phone' => '08123400000']);
+
+        $byPhone = GroupMember::factory()->create([
+            'group_id' => $this->group->id,
+            'user_id' => null,
+            'email' => 'different@example.com',
+            'phone' => '08123400000',
+        ]);
+
+        event(new Login('web', $user, false));
+
+        $this->assertSame($user->id, $byPhone->fresh()->user_id);
+    }
+
+    public function test_member_is_emailed_when_status_changes_to_active(): void
+    {
+        Setting::set('mail_enabled', '1');
+        Notification::fake();
+
+        $member = GroupMember::factory()->create([
+            'group_id' => $this->group->id,
+            'email' => 'member@example.com',
+            'status' => 'pending',
+        ]);
+
+        $member->update(['status' => 'active']);
+
+        Notification::assertSentOnDemand(CourseRegistrationStatusUpdated::class);
+    }
+
+    public function test_member_is_not_emailed_when_mail_is_disabled(): void
+    {
+        Setting::set('mail_enabled', '0');
+        Notification::fake();
+
+        $member = GroupMember::factory()->create([
+            'group_id' => $this->group->id,
+            'email' => 'member@example.com',
+            'status' => 'pending',
+        ]);
+
+        $member->update(['status' => 'active']);
+
+        Notification::assertNothingSent();
+    }
+
+    public function test_my_courses_requires_login(): void
+    {
+        $this->get(route('courses.mine'))->assertRedirect(route('login'));
+    }
+
+    public function test_my_courses_shows_payment_summary(): void
+    {
+        $user = User::factory()->create();
+        $member = GroupMember::factory()->create([
+            'group_id' => $this->group->id,
+            'user_id' => $user->id,
+            'full_name' => 'Paying Member',
+        ]);
+        CoursePayment::factory()->create([
+            'group_member_id' => $member->id,
+            'amount' => 25000,
+            'status' => 'unpaid',
+        ]);
+
+        $this->actingAs($user)->get(route('courses.mine'))
+            ->assertStatus(200)
+            ->assertSee('Outstanding')
+            ->assertSee('Rp25.000');
+    }
+
+    public function test_my_courses_lists_only_the_users_own_registrations(): void
+    {
+        $user = User::factory()->create();
+
+        GroupMember::factory()->create([
+            'group_id' => $this->group->id,
+            'user_id' => $user->id,
+            'full_name' => 'My Own Registration',
+        ]);
+        GroupMember::factory()->create([
+            'group_id' => $this->group->id,
+            'full_name' => 'Someone Elses Registration',
+        ]);
+
+        $this->actingAs($user)->get(route('courses.mine'))
+            ->assertStatus(200)
+            ->assertSee('My Own Registration')
+            ->assertDontSee('Someone Elses Registration');
     }
 }

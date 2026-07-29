@@ -8,54 +8,66 @@ use Illuminate\Database\Seeder;
 class InstitutionSeeder extends Seeder
 {
     /**
-     * Seed the education units (jenjang) that each run their own PPDB.
+     * Seed the courses (les) this site offers. Every institution here is a
+     * course with groups (has_groups), not a formal school jenjang.
      */
     public function run(): void
     {
-        $institutions = [
+        $courses = [
             [
-                'slug' => 'sd',
-                'name' => 'Sekolah Dasar',
-                'short_name' => 'SD',
-                'icon' => '🎒',
+                'slug' => 'renang',
+                'name' => 'Les Renang',
+                'short_name' => 'RENANG',
+                'icon' => '🏊',
                 'color' => 'info',
-                'description' => 'Jenjang pendidikan dasar untuk kelas 1 hingga 6.',
+                'description' => 'Belajar berenang untuk segala usia — dari pengenalan air hingga teknik gaya lengkap, dalam kelompok sesuai tingkat.',
                 'sort_order' => 1,
             ],
             [
-                'slug' => 'smp',
-                'name' => 'Sekolah Menengah Pertama',
-                'short_name' => 'SMP',
-                'icon' => '📘',
+                'slug' => 'bahasa-inggris',
+                'name' => 'Les Bahasa Inggris',
+                'short_name' => 'ENGLISH',
+                'icon' => '🗣️',
                 'color' => 'success',
-                'description' => 'Jenjang pendidikan menengah pertama untuk kelas 7 hingga 9.',
+                'description' => 'Kelas percakapan & grammar dengan kelompok kecil, dari level pemula sampai mahir.',
                 'sort_order' => 2,
             ],
             [
-                'slug' => 'sma',
-                'name' => 'Sekolah Menengah Atas',
-                'short_name' => 'SMA',
-                'icon' => '🎓',
+                'slug' => 'musik',
+                'name' => 'Les Musik',
+                'short_name' => 'MUSIK',
+                'icon' => '🎹',
                 'color' => 'warning',
-                'description' => 'Jenjang pendidikan menengah atas untuk kelas 10 hingga 12.',
+                'description' => 'Piano, gitar, dan vokal bersama pelatih berpengalaman. Kelompok kecil agar tiap peserta terpantau.',
                 'sort_order' => 3,
             ],
             [
-                'slug' => 'swimming',
-                'name' => 'Swimming Course',
-                'short_name' => 'SWIM',
-                'icon' => '🏊',
-                'color' => 'info',
-                'description' => 'Swimming lessons (les renang) for all ages, organised into skill-based groups.',
+                'slug' => 'matematika',
+                'name' => 'Bimbel Matematika',
+                'short_name' => 'MTK',
+                'icon' => '➗',
+                'color' => 'primary',
+                'description' => 'Bimbingan belajar matematika terstruktur untuk menguatkan konsep dan persiapan ujian.',
                 'sort_order' => 4,
-                'has_groups' => true,
+            ],
+            [
+                'slug' => 'menggambar',
+                'name' => 'Les Menggambar',
+                'short_name' => 'GAMBAR',
+                'icon' => '🎨',
+                'color' => 'danger',
+                'description' => 'Kelas menggambar & melukis untuk mengasah kreativitas anak dan remaja.',
+                'sort_order' => 5,
             ],
         ];
 
-        foreach ($institutions as $institution) {
+        foreach ($courses as $course) {
             Institution::updateOrCreate(
-                ['slug' => $institution['slug']],
-                array_merge(['has_groups' => false], $institution, ['is_active' => true]),
+                ['slug' => $course['slug']],
+                array_merge($course, [
+                    'is_active' => true,
+                    'has_groups' => true,
+                ]),
             );
         }
     }

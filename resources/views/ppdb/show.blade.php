@@ -1,6 +1,7 @@
 @extends('layouts.public')
 
 @push('head')
+@include('partials.content-block-styles')
 <style>
     /* ── Hero ─────────────────────────────────── */
     .ppdb-hero {
@@ -116,11 +117,15 @@
                     @endif
                 </div>
                 <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-4">
-                    PPDB {{ $institution->short_name ?? $institution->name }}<br>
+                    {{ $institution->page_title ?: 'PPDB '.($institution->short_name ?? $institution->name) }}<br>
                     <span class="text-amber-400">{{ $spmbYear }}</span>
                 </h1>
                 <p class="text-white/70 text-sm sm:text-base leading-relaxed max-w-xl mx-auto lg:mx-0 mb-8">
-                    Penerimaan Peserta Didik Baru <span class="text-white font-semibold">{{ $institution->name }}</span> — {{ $siteName }}.@if($institution->usesInternalForm() && $paths->isNotEmpty()) Daftarkan diri melalui jalur {{ $paths->pluck('name')->join(', ', ', dan ') }}.@endif
+                    @if($institution->page_subtitle)
+                        {{ $institution->page_subtitle }}
+                    @else
+                        Penerimaan Peserta Didik Baru <span class="text-white font-semibold">{{ $institution->name }}</span> — {{ $siteName }}.@if($institution->usesInternalForm() && $paths->isNotEmpty()) Daftarkan diri melalui jalur {{ $paths->pluck('name')->join(', ', ', dan ') }}.@endif
+                    @endif
                 </p>
 
                 {{-- Timeline chips — diambil dari gelombang pendaftaran --}}
@@ -200,6 +205,12 @@
         </div>
     </div>
 </section>
+
+@if(!empty($institution->blocks))
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-12">
+    @include('partials.content-blocks', ['blocks' => $institution->blocks, 'title' => $institution->name])
+</div>
+@endif
 
 {{-- ═══════════════════════ MAIN CONTENT ════════════════════════ --}}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12" x-data="{ tab: 'prosedur' }" @open-form.window="tab = 'form'">

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Listeners\ClaimGuestCourseRegistrations;
 use App\Models\Event;
 use App\Models\Post;
 use App\Models\Program;
@@ -14,10 +15,12 @@ use App\Observers\SlideObserver;
 use App\Observers\TeacherObserver;
 use App\Services\SitemapBuilder;
 use Filament\Tables\Columns\ImageColumn;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Event as EventFacade;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -48,6 +51,9 @@ class AppServiceProvider extends ServiceProvider
         $this->configureMailFromSettings();
         $this->localizeEmailVerification();
         $this->invalidateSitemapCacheOnContentChange();
+
+        // Attach guest course registrations to a member when they log in.
+        EventFacade::listen(Login::class, ClaimGuestCourseRegistrations::class);
     }
 
     /**

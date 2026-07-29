@@ -65,6 +65,24 @@
             <p class="text-sm font-medium">{{ session('error') }}</p>
         </div>
     @endif
+
+    @guest
+        @if(session('offer_account') && Route::has('register'))
+            @php $offer = session('offer_account'); @endphp
+            <div class="mb-6 fi-card border p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4" style="border-color:var(--border)" data-aos="fade-up">
+                <div class="w-12 h-12 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center shrink-0 text-2xl">👤</div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="font-bold" style="color:var(--text)">Create an account to track your registration</h3>
+                    <p class="text-sm mt-0.5" style="color:var(--muted)">Sign up with the same details to follow your status, schedule, and payments under <strong>My Courses</strong>.</p>
+                </div>
+                <a href="{{ route('register', array_filter(['name' => $offer['name'] ?? null, 'email' => $offer['email'] ?? null])) }}"
+                   class="btn-primary inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold shrink-0">
+                    Create Account
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                </a>
+            </div>
+        @endif
+    @endguest
 </div>
 
 {{-- ═══════════════════════ GROUPS ═════════════════════════════ --}}

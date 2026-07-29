@@ -50,8 +50,14 @@ class SpmbController extends Controller
      * PPDB page for a single jenjang: procedures, fees, schedule and the
      * registration form scoped to this institution.
      */
-    public function show(Institution $institution): View
+    public function show(Institution $institution): View|RedirectResponse
     {
+        // Course institutions register through their group-based flow, not the
+        // SPMB form, so send visitors to the courses page instead.
+        if ($institution->has_groups) {
+            return redirect()->route('courses.show', $institution);
+        }
+
         $procedures = $institution->resolvedProcedures() ?: $this->defaultProcedures();
         $fees = $institution->resolvedFees();
         $formTitle = $institution->resolvedFormTitle();
@@ -89,6 +95,11 @@ class SpmbController extends Controller
 
     public function store(Request $request, Institution $institution): RedirectResponse
     {
+        // Course institutions never collect SPMB submissions.
+        if ($institution->has_groups) {
+            return redirect()->route('courses.show', $institution);
+        }
+
         // External-link and embed jenjang collect data elsewhere; never store here.
         if (! $institution->usesInternalForm()) {
             return redirect()->route('ppdb.show', $institution);

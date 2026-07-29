@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 class Group extends Model
 {
@@ -79,6 +80,72 @@ class Group extends Model
     public function members(): HasMany
     {
         return $this->hasMany(GroupMember::class);
+    }
+
+    /** @return HasMany<GroupSession, $this> */
+    public function sessions(): HasMany
+    {
+        return $this->hasMany(GroupSession::class);
+    }
+
+    /**
+     * Carbon dayOfWeek numbers (0=Sun … 6=Sat) for this group's weekly pattern.
+     *
+     * @return array<int, int>
+     */
+    private function scheduledWeekdays(): array
+    {
+        $map = ['sun' => 0, 'mon' => 1, 'tue' => 2, 'wed' => 3, 'thu' => 4, 'fri' => 5, 'sat' => 6];
+
+        return collect($this->days ?? [])
+            ->map(fn (string $day): ?int => $map[$day] ?? null)
+            ->filter(fn (?int $value): bool => $value !== null)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Create dated sessions from the group's weekly pattern between two dates,
+     * inheriting the group's time and location. Existing dates are skipped so
+     * the generator is safe to re-run. Returns the number of sessions created.
+     */
+    public function generateSessions(Carbon $start, Carbon $end, ?float $fee = null): int
+    {
+        $weekdays = $this->scheduledWeekdays();
+
+        if ($weekdays === [] || $start->gt($end)) {
+            return 0;
+        }
+
+        $existing = $this->sessions()
+            ->pluck('date')
+            ->map(fn (Carbon $date): string => $date->toDateString())
+            ->all();
+
+        $created = 0;
+
+        for ($date = $start->copy()->startOfDay(); $date->lte($end); $date->addDay()) {
+            if (! in_array($date->dayOfWeek, $weekdays, true)) {
+                continue;
+            }
+
+            if (in_array($date->toDateString(), $existing, true)) {
+                continue;
+            }
+
+            $this->sessions()->create([
+                'date' => $date->toDateString(),
+                'start_time' => $this->start_time,
+                'end_time' => $this->end_time,
+                'location' => $this->location,
+                'fee' => $fee,
+                'status' => 'scheduled',
+            ]);
+
+            $created++;
+        }
+
+        return $created;
     }
 
     /**

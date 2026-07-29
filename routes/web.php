@@ -113,6 +113,8 @@ Route::get('/program/{program:slug}', [ProgramController::class, 'show'])->name(
 
 // Courses / Les (institutions with groups)
 Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
+Route::get('/my-courses', [CourseController::class, 'mine'])->middleware('auth')->name('courses.mine');
+Route::get('/my-courses/calendar', [CourseController::class, 'calendar'])->middleware('auth')->name('courses.calendar');
 Route::get('/courses/{institution:slug}', [CourseController::class, 'show'])->name('courses.show');
 Route::get('/courses/{institution:slug}/{group:slug}/register', [CourseController::class, 'registerForm'])
     ->scopeBindings()

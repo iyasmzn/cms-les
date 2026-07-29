@@ -2,10 +2,13 @@
 
 namespace Tests\Feature\Filament;
 
+use App\Filament\Resources\Groups\Pages\EditGroup;
 use App\Filament\Resources\Groups\Pages\ListGroups;
+use App\Filament\Resources\Groups\RelationManagers\SessionsRelationManager;
 use App\Filament\Resources\Institutions\Pages\EditInstitution;
 use App\Filament\Resources\Institutions\RelationManagers\GroupsRelationManager;
 use App\Models\Group;
+use App\Models\GroupSession;
 use App\Models\Institution;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -62,5 +65,18 @@ class GroupResourceTest extends TestCase
         $this->assertFalse(
             GroupsRelationManager::canViewForRecord($plain, EditInstitution::class),
         );
+    }
+
+    public function test_sessions_relation_manager_lists_sessions(): void
+    {
+        $group = Group::factory()->create();
+        $sessions = GroupSession::factory()->count(3)->create(['group_id' => $group->id]);
+
+        Livewire::test(SessionsRelationManager::class, [
+            'ownerRecord' => $group,
+            'pageClass' => EditGroup::class,
+        ])
+            ->assertSuccessful()
+            ->assertCanSeeTableRecords($sessions);
     }
 }

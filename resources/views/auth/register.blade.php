@@ -43,7 +43,7 @@
 
                 <div>
                     <label class="block text-sm font-semibold mb-1.5" style="color:var(--text)">Nama Lengkap</label>
-                    <input type="text" name="name" value="{{ old('name') }}" required autofocus
+                    <input type="text" name="name" value="{{ old('name', request('name')) }}" required autofocus
                            placeholder="Ahmad Fauzi"
                            class="w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all focus:ring-2"
                            style="border-color:var(--border);background:var(--bg);color:var(--text)">
@@ -51,7 +51,7 @@
 
                 <div>
                     <label class="block text-sm font-semibold mb-1.5" style="color:var(--text)">Email</label>
-                    <input type="email" name="email" value="{{ old('email') }}" required
+                    <input type="email" name="email" value="{{ old('email', request('email')) }}" required
                            placeholder="nama@email.com"
                            class="w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all focus:ring-2"
                            style="border-color:var(--border);background:var(--bg);color:var(--text)">

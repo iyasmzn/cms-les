@@ -126,6 +126,13 @@ class MembersRelationManager extends RelationManager
                     ->label('Phone')
                     ->placeholder('—'),
 
+                TextColumn::make('user.name')
+                    ->label('Account')
+                    ->badge()
+                    ->color(fn ($state): string => $state ? 'success' : 'gray')
+                    ->formatStateUsing(fn (?string $state): string => $state ?? 'Guest')
+                    ->default('Guest'),
+
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()

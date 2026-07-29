@@ -28,6 +28,9 @@ class Institution extends Model
         'icon_image',
         'color',
         'description',
+        'page_title',
+        'page_subtitle',
+        'blocks',
         'detail_url',
         'address',
         'sort_order',
@@ -47,6 +50,7 @@ class Institution extends Model
         'sort_order' => 'integer',
         'is_active' => 'boolean',
         'has_groups' => 'boolean',
+        'blocks' => 'array',
         'procedures' => 'array',
         'fees' => 'array',
     ];

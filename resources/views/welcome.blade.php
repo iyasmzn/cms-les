@@ -209,17 +209,17 @@
     $defaultSectionOrder = [
         ['key' => 'section_hero',        'visible' => true],
         ['key' => 'section_quick_links', 'visible' => true],
-        ['key' => 'section_spmb',        'visible' => true],
+        ['key' => 'section_courses',     'visible' => true],
         ['key' => 'section_stats',       'visible' => true],
         ['key' => 'section_principal',   'visible' => true],
-        ['key' => 'section_spmb_steps',  'visible' => true],
         ['key' => 'section_programs',    'visible' => true],
-        ['key' => 'section_courses',     'visible' => true],
         ['key' => 'section_events',      'visible' => true],
         ['key' => 'section_products',    'visible' => true],
         ['key' => 'section_gallery',     'visible' => true],
         ['key' => 'section_blog',        'visible' => true],
         ['key' => 'section_testimonials','visible' => true],
+        ['key' => 'section_spmb',        'visible' => true],
+        ['key' => 'section_spmb_steps',  'visible' => true],
         ['key' => 'section_contact',     'visible' => true],
     ];
 

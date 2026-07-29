@@ -34,12 +34,14 @@ class ProfileController extends Controller
         $validated = $request->validateWithBag('updateProfile', [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'phone' => ['nullable', 'string', 'max:30'],
             'avatar' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp,gif', 'max:8192'],
         ]);
 
         $user->fill([
             'name' => $validated['name'],
             'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
         ]);
 
         if ($request->hasFile('avatar')) {

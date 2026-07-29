@@ -125,6 +125,18 @@
                                style="border-color:var(--border);background:var(--bg);color:var(--text)">
                     </div>
 
+                    <div>
+                        <label class="block text-sm font-semibold mb-1.5" style="color:var(--text)">
+                            Nomor HP
+                        </label>
+                        <input type="tel" name="phone"
+                               value="{{ old('phone', $user->phone) }}"
+                               placeholder="08xxxxxxxxxx"
+                               class="w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all focus:ring-2"
+                               style="border-color:var(--border);background:var(--bg);color:var(--text)">
+                        <p class="text-xs mt-1.5" style="color:var(--muted)">Dipakai untuk menautkan pendaftaran les yang Anda buat sebagai tamu.</p>
+                    </div>
+
                     <button type="submit" class="btn-primary justify-center py-3 px-6">
                         Simpan Perubahan
                     </button>

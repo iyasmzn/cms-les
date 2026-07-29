@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Institutions\Schemas;
 
+use App\Filament\Schemas\ContentBlocks;
 use App\Filament\Support\IconUpload;
 use App\Models\Institution;
 use Filament\Forms\Components\Repeater;
@@ -154,6 +155,20 @@ class InstitutionForm
                 ->collapsible()
                 ->collapsed()
                 ->schema([
+                    TextInput::make('page_title')
+                        ->label('Judul Halaman (Hero)')
+                        ->maxLength(150)
+                        ->placeholder(fn (Get $get): string => 'PPDB '.($get('short_name') ?: 'Unit'))
+                        ->helperText('Judul besar di bagian atas halaman unit ini. Kosongkan untuk memakai judul bawaan (PPDB + singkatan).')
+                        ->columnSpanFull(),
+
+                    Textarea::make('page_subtitle')
+                        ->label('Deskripsi Halaman (Hero)')
+                        ->rows(2)
+                        ->maxLength(500)
+                        ->helperText('Kalimat pengantar di bawah judul. Kosongkan untuk memakai deskripsi bawaan.')
+                        ->columnSpanFull(),
+
                     TextInput::make('form_title')
                         ->label('Judul Formulir')
                         ->maxLength(120)
@@ -234,6 +249,15 @@ class InstitutionForm
                         ->collapsible()
                         ->collapsed()
                         ->columnSpanFull(),
+                ]),
+
+            Section::make('Konten Tambahan')
+                ->description('Blok konten opsional (cover, galeri, carousel, tombol CTA) yang ditampilkan di halaman unit ini.')
+                ->icon('heroicon-o-photo')
+                ->collapsible()
+                ->collapsed()
+                ->schema([
+                    ContentBlocks::make('institutions/blocks'),
                 ]),
         ]);
     }

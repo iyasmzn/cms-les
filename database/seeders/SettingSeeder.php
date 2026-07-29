@@ -70,7 +70,7 @@ class SettingSeeder extends Seeder
         return [
             'nav_items' => json_encode([
                 ['label' => 'Beranda',  'url' => '/',              'target' => '_self', 'is_active' => true, 'children' => []],
-                ['label' => 'Profil',   'url' => '#sambutan',      'target' => '_self', 'is_active' => true, 'children' => []],
+                ['label' => 'Courses',  'url' => '/courses',       'target' => '_self', 'is_active' => true, 'children' => []],
                 ['label' => 'Layanan',  'url' => '/program',       'target' => '_self', 'is_active' => true, 'children' => []],
                 ['label' => 'Agenda',   'url' => '/kegiatan',      'target' => '_self', 'is_active' => true, 'children' => []],
                 ['label' => 'Blog',     'url' => '/blog',          'target' => '_self', 'is_active' => true, 'children' => []],
@@ -86,16 +86,20 @@ class SettingSeeder extends Seeder
     {
         return [
             'section_order' => json_encode([
-                ['key' => 'section_hero',        'visible' => true],
-                ['key' => 'section_stats',       'visible' => true],
-                ['key' => 'section_principal',   'visible' => true],
-                ['key' => 'section_programs',    'visible' => true],
-                ['key' => 'section_events',      'visible' => true],
-                ['key' => 'section_products',    'visible' => true],
-                ['key' => 'section_spmb',        'visible' => true],
-                ['key' => 'section_spmb_steps',  'visible' => true],
-                ['key' => 'section_blog',        'visible' => true],
-                ['key' => 'section_contact',     'visible' => true],
+                ['key' => 'section_hero',         'visible' => true],
+                ['key' => 'section_quick_links',  'visible' => true],
+                ['key' => 'section_courses',      'visible' => true],
+                ['key' => 'section_stats',        'visible' => true],
+                ['key' => 'section_principal',    'visible' => true],
+                ['key' => 'section_programs',     'visible' => true],
+                ['key' => 'section_events',       'visible' => true],
+                ['key' => 'section_products',     'visible' => true],
+                ['key' => 'section_gallery',      'visible' => true],
+                ['key' => 'section_blog',         'visible' => true],
+                ['key' => 'section_testimonials', 'visible' => true],
+                ['key' => 'section_spmb',         'visible' => false],
+                ['key' => 'section_spmb_steps',   'visible' => false],
+                ['key' => 'section_contact',      'visible' => true],
             ]),
         ];
     }
@@ -107,10 +111,10 @@ class SettingSeeder extends Seeder
     {
         return [
             'quick_links' => json_encode([
-                ['icon' => '📋', 'label' => 'Pendaftaran', 'url' => '#spmb',          'is_active' => true],
-                ['icon' => '📚', 'label' => 'Katalog',     'url' => '/buku',          'is_active' => true],
+                ['icon' => '🏊', 'label' => 'Courses',     'url' => '/courses',       'is_active' => true],
+                ['icon' => '🗓', 'label' => 'Jadwal',      'url' => '/my-courses',    'is_active' => true],
                 ['icon' => '🎓', 'label' => 'Layanan',     'url' => '/program',       'is_active' => true],
-                ['icon' => '🗓', 'label' => 'Agenda',      'url' => '/kegiatan',      'is_active' => true],
+                ['icon' => '📚', 'label' => 'Katalog',     'url' => '/buku',          'is_active' => true],
                 ['icon' => '📞', 'label' => 'Kontak',      'url' => '#kontak',        'is_active' => true],
             ]),
         ];

@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Notifications\CourseRegistrationStatusUpdated;
 use Database\Factories\GroupMemberFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
 class GroupMember extends Model
@@ -16,6 +19,7 @@ class GroupMember extends Model
 
     protected $fillable = [
         'group_id',
+        'user_id',
         'registration_number',
         'full_name',
         'nik',
@@ -51,12 +55,68 @@ class GroupMember extends Model
             $member->registration_number = sprintf('%s-%04d', $short, $member->id);
             $member->saveQuietly();
         });
+
+        static::updated(function (self $member): void {
+            $member->notifyStatusChange();
+        });
+    }
+
+    /**
+     * Email the member when an admin moves their registration to a decided
+     * state (active/inactive). Only runs when mail is enabled and an email is
+     * on file, so the panel action never fails on unconfigured SMTP.
+     */
+    private function notifyStatusChange(): void
+    {
+        if (! $this->wasChanged('status') || ! in_array($this->status, ['active', 'inactive'], true)) {
+            return;
+        }
+
+        if (blank($this->email) || ! (bool) Setting::get('mail_enabled', false)) {
+            return;
+        }
+
+        Notification::route('mail', $this->email)
+            ->notify(new CourseRegistrationStatusUpdated($this));
     }
 
     /** @return BelongsTo<Group, $this> */
     public function group(): BelongsTo
     {
         return $this->belongsTo(Group::class);
+    }
+
+    /** @return HasMany<CoursePayment, $this> */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(CoursePayment::class);
+    }
+
+    /**
+     * Total amount this member still owes (unpaid payments).
+     */
+    public function outstandingTotal(): float
+    {
+        return (float) $this->payments()->where('status', 'unpaid')->sum('amount');
+    }
+
+    /**
+     * Total amount this member has paid.
+     */
+    public function paidTotal(): float
+    {
+        return (float) $this->payments()->where('status', 'paid')->sum('amount');
+    }
+
+    /**
+     * The account that submitted this registration, if the registrant was
+     * logged in. Null for guest registrations.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     /** @return array<string, string> */
