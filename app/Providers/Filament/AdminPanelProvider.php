@@ -36,6 +36,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogo(fn (): ?HtmlString => $this->brandLogo())
             ->brandLogoHeight('2.25rem')
             ->favicon(fn (): ?string => filled(setting('site_favicon')) ? asset('storage/'.setting('site_favicon')) : null)
+            ->sidebarCollapsibleOnDesktop()
             ->globalSearch(FeatureGlobalSearchProvider::class)
             ->databaseNotifications()
             ->profile(EditProfile::class)
