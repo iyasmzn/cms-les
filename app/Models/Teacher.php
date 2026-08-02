@@ -15,7 +15,7 @@ class Teacher extends Model
     use HasFactory;
 
     protected $fillable = [
-        'institution_id',
+        'institution_id', 'user_id',
         'name', 'nip', 'position', 'subject',
         'education', 'phone', 'email', 'whatsapp',
         'photo', 'is_active', 'sort_order',
@@ -36,6 +36,16 @@ class Teacher extends Model
     public function institution(): BelongsTo
     {
         return $this->belongsTo(Institution::class);
+    }
+
+    /**
+     * The panel account this coach signs in with, when they have one.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     /**

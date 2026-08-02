@@ -101,6 +101,16 @@ class TeacherForm
                             ->hint('Angka kecil tampil lebih dulu.'),
                     ]),
 
+                    Select::make('user_id')
+                        ->label('Akun Panel')
+                        ->relationship('user', 'name')
+                        ->searchable()
+                        ->preload()
+                        ->native(false)
+                        ->unique(ignoreRecord: true)
+                        ->helperText('Kaitkan ke akun user agar pelatih ini bisa login dan mengelola kelompok yang dilatihnya. Akun tersebut juga perlu diberi role "instructor".')
+                        ->columnSpanFull(),
+
                     Toggle::make('is_active')
                         ->label('Aktif Mengajar')
                         ->default(true)

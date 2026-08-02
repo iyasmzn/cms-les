@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Groups\RelationManagers;
 
+use App\Models\Group;
 use App\Models\GroupMember;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -13,6 +14,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Schema;
@@ -177,13 +179,115 @@ class MembersRelationManager extends RelationManager
                     ->visible(fn (GroupMember $record): bool => $record->status !== 'inactive')
                     ->action(fn (GroupMember $record) => $record->update(['status' => 'inactive'])),
 
+                Action::make('moveGroup')
+                    ->label('Move Group')
+                    ->icon('heroicon-o-arrows-right-left')
+                    ->color('info')
+                    ->modalHeading('Move Member to Another Group')
+                    ->modalDescription('Registration number, join date, and payment history all follow the member.')
+                    ->visible(fn (): bool => $this->canMoveMembers())
+                    ->schema([
+                        Select::make('group_id')
+                            ->label('Move to')
+                            ->options(fn (): array => $this->moveTargets())
+                            ->required()
+                            ->native(false)
+                            ->helperText('Active groups in this same course that still have seats.'),
+                    ])
+                    ->action(fn (GroupMember $record, array $data) => $this->moveMember($record, (int) $data['group_id'])),
+
                 EditAction::make(),
-                DeleteAction::make(),
+
+                DeleteAction::make()
+                    ->visible(fn (): bool => auth()->user()?->can('Delete:Group') ?? false),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->visible(fn (): bool => auth()->user()?->can('DeleteAny:Group') ?? false),
                 ]),
             ]);
+    }
+
+    /**
+     * Whether the current user may move members out of the group being viewed.
+     */
+    protected function canMoveMembers(): bool
+    {
+        return auth()->user()?->can('moveMember', $this->getOwnerRecord()) ?? false;
+    }
+
+    /**
+     * Sibling groups a member can be moved into: same course, still active,
+     * and not already full. Keyed by id for the Select.
+     *
+     * @return array<int, string>
+     */
+    protected function moveTargets(): array
+    {
+        $current = $this->getOwnerRecord();
+
+        return Group::query()
+            ->where('institution_id', $current->institution_id)
+            ->whereKeyNot($current->getKey())
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get()
+            ->filter(fn (Group $group): bool => $group->isOpen())
+            ->mapWithKeys(fn (Group $group): array => [
+                $group->id => $group->level ? "{$group->name} — {$group->level}" : $group->name,
+            ])
+            ->all();
+    }
+
+    /**
+     * Move the member, re-checking the target group at the moment of the write
+     * so a group that filled up while the modal was open is not overfilled.
+     */
+    protected function moveMember(GroupMember $member, int $targetGroupId): void
+    {
+        $current = $this->getOwnerRecord();
+        $target = Group::find($targetGroupId);
+
+        $refuse = function (string $body): void {
+            Notification::make()->danger()->title('Move failed')->body($body)->send();
+        };
+
+        if ($target === null || $target->institution_id !== $current->institution_id || ! $target->is_active) {
+            $refuse('That group is not part of this course.');
+
+            return;
+        }
+
+        if (! $target->isOpen()) {
+            $refuse("\"{$target->name}\" is full.");
+
+            return;
+        }
+
+        // A member may only hold one group per course, so a stale duplicate in
+        // the target group has to be resolved by hand rather than merged here.
+        $duplicate = $target->members()
+            ->whereIn('status', ['pending', 'active'])
+            ->when(
+                $member->user_id,
+                fn ($query) => $query->where('user_id', $member->user_id),
+                fn ($query) => $query->where('phone', $member->phone),
+            )
+            ->exists();
+
+        if ($duplicate) {
+            $refuse("This member already has a registration in \"{$target->name}\".");
+
+            return;
+        }
+
+        $member->update(['group_id' => $target->id]);
+
+        Notification::make()
+            ->success()
+            ->title('Member moved')
+            ->body("{$member->full_name} is now in \"{$target->name}\".")
+            ->send();
     }
 }

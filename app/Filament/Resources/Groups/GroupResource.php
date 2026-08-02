@@ -10,11 +10,13 @@ use App\Filament\Resources\Groups\RelationManagers\SessionsRelationManager;
 use App\Filament\Resources\Groups\Schemas\GroupForm;
 use App\Filament\Resources\Groups\Tables\GroupsTable;
 use App\Models\Group;
+use App\Models\User;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 class GroupResource extends Resource
@@ -41,6 +43,23 @@ class GroupResource extends Resource
     public static function table(Table $table): Table
     {
         return GroupsTable::configure($table);
+    }
+
+    /**
+     * Accounts linked to a coach profile only see the groups they coach,
+     * unless they hold ViewAll:Group. Everyone else sees the full list.
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        $user = auth()->user();
+
+        if ($user instanceof User && $user->isInstructor() && ! $user->can('ViewAll:Group')) {
+            $query->whereKey($user->coachedGroupIds());
+        }
+
+        return $query;
     }
 
     public static function getRelations(): array

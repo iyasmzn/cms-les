@@ -27,6 +27,12 @@ class ShieldSeeder extends Seeder
         // 3. Flush cache lagi agar Permission::all() baca dari DB bukan cache lama
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
+        // 3b. Permission kustom di luar CRUD standar Shield. Dibuat sebelum
+        //     super_admin di-sync agar ikut terbawa ke role tersebut.
+        foreach (['ViewAll:Group', 'MoveMember:Group'] as $custom) {
+            Permission::findOrCreate($custom, 'web');
+        }
+
         // 4. Buat role super_admin dan beri semua permissions
         $superAdmin = Role::firstOrCreate(
             ['name' => 'super_admin', 'guard_name' => 'web']
@@ -60,6 +66,22 @@ class ShieldSeeder extends Seeder
 
         $superAuthor = Role::firstOrCreate(['name' => 'author_super', 'guard_name' => 'web']);
         $superAuthor->syncPermissions(Permission::whereIn('name', $superAuthorPermissions)->get());
+
+        // 5c. Role instruktur/pelatih.
+        //
+        // Hanya melihat kelompok yang dia latih (lewat teachers.user_id), dan
+        // boleh memindahkan member antar kelompok dalam course yang sama.
+        // Sengaja tanpa Delete/DeleteAny agar tidak bisa menghapus member.
+        $instructorPermissions = [
+            'ViewAny:Group', 'View:Group', 'Update:Group', 'MoveMember:Group',
+            'ViewAny:GroupSession', 'View:GroupSession', 'Create:GroupSession', 'Update:GroupSession',
+        ];
+
+        $instructor = Role::firstOrCreate(['name' => 'instructor', 'guard_name' => 'web']);
+        $instructor->syncPermissions(
+            collect($instructorPermissions)
+                ->map(fn (string $name) => Permission::findOrCreate($name, 'web'))
+        );
 
         // 6. Assign super_admin ke user admin (fallback ke user pertama jika email tidak ditemukan)
         $admin = User::where('email', 'admin@email.com')->first()
