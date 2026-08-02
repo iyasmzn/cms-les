@@ -11,6 +11,7 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
@@ -54,8 +55,9 @@ class UserForm
                             ->label('Email Terverifikasi')
                             ->onColor('success')
                             ->offColor('danger')
-                            ->dehydrateStateUsing(fn (bool $state): ?string => $state ? now()->toDateTimeString() : null)
-                            ->afterStateHydrated(fn ($component, $state) => $component->state(filled($state))),
+                            ->dehydrateStateUsing(fn (bool $state, ?User $record): ?Carbon => $state
+                                ? ($record?->email_verified_at ?? now())
+                                : null),
                     ]),
 
                 Section::make('Keamanan')
