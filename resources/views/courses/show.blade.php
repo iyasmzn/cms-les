@@ -139,7 +139,17 @@
                     <p class="text-sm leading-relaxed mb-5" style="color:var(--muted)">{{ $group->description }}</p>
                 @endif
 
-                @if($open)
+                @if($existingRegistration && $existingRegistration->group_id === $group->id)
+                    <a href="{{ route('courses.sessions', $existingRegistration) }}"
+                       class="mt-auto inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-bold bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors">
+                        ✅ You're registered — view sessions
+                    </a>
+                @elseif($existingRegistration)
+                    <span class="mt-auto inline-flex items-center justify-center text-center w-full py-2.5 px-3 rounded-xl text-sm font-semibold bg-gray-100 text-gray-500 cursor-not-allowed"
+                          title="Only one group per course is allowed.">
+                        Already in "{{ $existingRegistration->group?->name }}"
+                    </span>
+                @elseif($open)
                     <a href="{{ route('courses.register', [$institution, $group]) }}"
                        class="btn-primary mt-auto inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-bold">
                         Register

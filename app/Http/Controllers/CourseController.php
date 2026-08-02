@@ -46,9 +46,11 @@ class CourseController extends Controller
     /**
      * A single course institution with its active groups.
      */
-    public function show(Institution $institution): View
+    public function show(Request $request, Institution $institution): View
     {
         abort_unless($institution->has_groups && $institution->is_active, 404);
+
+        $existingRegistration = $this->existingRegistration($request->user(), $institution);
 
         $groups = $institution->groups()
             ->active()
@@ -65,15 +67,20 @@ class CourseController extends Controller
             'canonical' => route('courses.show', $institution),
         ];
 
-        return view('courses.show', compact('institution', 'groups', 'seo'));
+        return view('courses.show', compact('institution', 'groups', 'existingRegistration', 'seo'));
     }
 
     /**
      * The registration form for joining a single group.
      */
-    public function registerForm(Institution $institution, Group $group): View|RedirectResponse
+    public function registerForm(Request $request, Institution $institution, Group $group): View|RedirectResponse
     {
         abort_unless($institution->has_groups && $institution->is_active && $group->is_active, 404);
+
+        if ($existing = $this->existingRegistration($request->user(), $institution)) {
+            return redirect()->route('courses.show', $institution)
+                ->with('error', $this->alreadyRegisteredMessage($existing));
+        }
 
         if (! $group->isOpen()) {
             return redirect()->route('courses.show', $institution)
@@ -204,14 +211,20 @@ class CourseController extends Controller
 
         $request->validate($this->spamProtectionRules($request));
 
+        if ($existing = $this->existingRegistration($request->user(), $institution)) {
+            return back()->with('error', $this->alreadyRegisteredMessage($existing));
+        }
+
         if (! $group->isOpen()) {
             return back()->with('error', "Group \"{$group->name}\" is currently full or closed for registration.");
         }
 
-        // A participant may not sign up for the same group twice while an
-        // earlier registration is still pending or active.
-        $activeInGroup = fn (string $column) => Rule::unique('group_members', $column)
-            ->where('group_id', $group->id)
+        // A participant may only hold one group per course unit, so the phone
+        // and email checks span every group of this institution — not just the
+        // one being applied for. This is what stops guests (who have no user
+        // account to match on) from signing up twice.
+        $activeInCourse = fn (string $column) => Rule::unique('group_members', $column)
+            ->whereIn('group_id', $institution->groups()->select('id'))
             ->whereIn('status', ['pending', 'active']);
 
         $data = $request->validate([
@@ -219,15 +232,15 @@ class CourseController extends Controller
             'gender' => ['nullable', 'in:male,female'],
             'birth_date' => ['nullable', 'date'],
             'birth_place' => ['nullable', 'string', 'max:120'],
-            'phone' => ['required', 'string', 'max:30', $activeInGroup('phone')],
-            'email' => ['nullable', 'email', 'max:120', $activeInGroup('email')],
+            'phone' => ['required', 'string', 'max:30', $activeInCourse('phone')],
+            'email' => ['nullable', 'email', 'max:120', $activeInCourse('email')],
             'address' => ['nullable', 'string', 'max:500'],
             'parent_name' => ['nullable', 'string', 'max:120'],
             'parent_phone' => ['nullable', 'string', 'max:30'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ], [
-            'phone.unique' => 'This phone number is already registered for this group.',
-            'email.unique' => 'This email is already registered for this group.',
+            'phone.unique' => 'This phone number is already registered for a group in this course.',
+            'email.unique' => 'This email is already registered for a group in this course.',
         ]);
 
         $data['status'] = 'pending';
@@ -250,6 +263,35 @@ class CourseController extends Controller
         }
 
         return $redirect;
+    }
+
+    /**
+     * The logged-in member's pending or active registration in any group of
+     * this course, if any. A participant may only hold one group per course
+     * unit, so this doubles as the "already registered" guard.
+     */
+    private function existingRegistration(?User $user, Institution $institution): ?GroupMember
+    {
+        if ($user === null) {
+            return null;
+        }
+
+        return GroupMember::query()
+            ->where('user_id', $user->id)
+            ->whereIn('status', ['pending', 'active'])
+            ->whereIn('group_id', $institution->groups()->select('id'))
+            ->with('group')
+            ->first();
+    }
+
+    /**
+     * Why a member is being turned away from a second group in the same course.
+     */
+    private function alreadyRegisteredMessage(GroupMember $existing): string
+    {
+        $groupName = $existing->group?->name ?? 'another group';
+
+        return "You are already registered in \"{$groupName}\" for this course. Only one group per course is allowed — contact us if you need to switch.";
     }
 
     /**

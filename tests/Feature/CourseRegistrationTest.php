@@ -197,6 +197,151 @@ class CourseRegistrationTest extends TestCase
         $this->assertDatabaseMissing('group_members', ['full_name' => 'Same Phone']);
     }
 
+    public function test_a_member_cannot_register_twice_in_the_same_group_with_a_different_phone(): void
+    {
+        $user = User::factory()->create();
+        GroupMember::factory()->active()->create([
+            'group_id' => $this->group->id,
+            'user_id' => $user->id,
+            'phone' => '08100000001',
+        ]);
+
+        $response = $this->actingAs($user)->post(route('courses.register.store', [$this->course, $this->group]), [
+            'full_name' => 'Second Attempt',
+            'phone' => '08100000002',
+        ]);
+
+        $response->assertSessionHas('error');
+        $this->assertDatabaseMissing('group_members', ['full_name' => 'Second Attempt']);
+    }
+
+    public function test_a_member_cannot_register_for_a_second_group_in_the_same_course(): void
+    {
+        $user = User::factory()->create();
+        GroupMember::factory()->active()->create([
+            'group_id' => $this->group->id,
+            'user_id' => $user->id,
+        ]);
+
+        $otherGroup = Group::factory()->create([
+            'institution_id' => $this->course->id,
+            'slug' => 'beginner-b',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('courses.register.store', [$this->course, $otherGroup]), [
+            'full_name' => 'Greedy Member',
+            'phone' => '08133333333',
+        ]);
+
+        $response->assertSessionHas('error');
+        $this->assertDatabaseMissing('group_members', ['full_name' => 'Greedy Member']);
+    }
+
+    public function test_a_member_can_still_register_for_a_different_course(): void
+    {
+        $user = User::factory()->create();
+        GroupMember::factory()->active()->create([
+            'group_id' => $this->group->id,
+            'user_id' => $user->id,
+        ]);
+
+        $otherCourse = Institution::factory()->create(['has_groups' => true, 'is_active' => true]);
+        $otherGroup = Group::factory()->create([
+            'institution_id' => $otherCourse->id,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($user)->post(route('courses.register.store', [$otherCourse, $otherGroup]), [
+            'full_name' => 'Multi Course Member',
+            'phone' => '08144444444',
+        ]);
+
+        $this->assertDatabaseHas('group_members', [
+            'full_name' => 'Multi Course Member',
+            'group_id' => $otherGroup->id,
+        ]);
+    }
+
+    public function test_an_inactive_registration_does_not_block_signing_up_again(): void
+    {
+        $user = User::factory()->create();
+        GroupMember::factory()->inactive()->create([
+            'group_id' => $this->group->id,
+            'user_id' => $user->id,
+        ]);
+
+        $this->actingAs($user)->post(route('courses.register.store', [$this->course, $this->group]), [
+            'full_name' => 'Returning Member',
+            'phone' => '08155555555',
+        ]);
+
+        $this->assertDatabaseHas('group_members', ['full_name' => 'Returning Member']);
+    }
+
+    public function test_the_registration_form_turns_away_a_member_already_in_the_course(): void
+    {
+        $user = User::factory()->create();
+        GroupMember::factory()->active()->create([
+            'group_id' => $this->group->id,
+            'user_id' => $user->id,
+        ]);
+
+        $otherGroup = Group::factory()->create([
+            'institution_id' => $this->course->id,
+            'slug' => 'beginner-c',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($user)->get(route('courses.register', [$this->course, $otherGroup]))
+            ->assertRedirect(route('courses.show', $this->course))
+            ->assertSessionHas('error');
+    }
+
+    public function test_a_guest_phone_is_blocked_across_groups_of_the_same_course(): void
+    {
+        GroupMember::factory()->active()->create([
+            'group_id' => $this->group->id,
+            'phone' => '08166666666',
+        ]);
+
+        $otherGroup = Group::factory()->create([
+            'institution_id' => $this->course->id,
+            'slug' => 'beginner-d',
+            'is_active' => true,
+        ]);
+
+        $response = $this->post(route('courses.register.store', [$this->course, $otherGroup]), [
+            'full_name' => 'Guest Second Group',
+            'phone' => '08166666666',
+        ]);
+
+        $response->assertSessionHasErrors('phone');
+        $this->assertDatabaseMissing('group_members', ['full_name' => 'Guest Second Group']);
+    }
+
+    public function test_the_course_page_marks_the_group_the_member_joined(): void
+    {
+        $user = User::factory()->create();
+        GroupMember::factory()->active()->create([
+            'group_id' => $this->group->id,
+            'user_id' => $user->id,
+        ]);
+
+        $otherGroup = Group::factory()->create([
+            'institution_id' => $this->course->id,
+            'slug' => 'beginner-e',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('courses.show', $this->course));
+
+        $response->assertStatus(200);
+        $response->assertSee("You're registered", false);
+        // The other group offers no way in while the member holds a spot.
+        $response->assertDontSee(route('courses.register', [$this->course, $otherGroup]), false);
+    }
+
     public function test_it_notifies_admins_on_registration(): void
     {
         $admin = User::factory()->create();
