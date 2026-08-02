@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use App\Listeners\ClaimGuestCourseRegistrations;
 use App\Models\Event;
+use App\Models\Institution;
 use App\Models\Post;
+use App\Models\Product;
 use App\Models\Program;
 use App\Models\Setting;
 use App\Models\Slide;
@@ -64,10 +66,26 @@ class AppServiceProvider extends ServiceProvider
     {
         $forget = fn (Model $model) => Cache::forget(SitemapBuilder::CACHE_KEY);
 
-        foreach ([Post::class, Event::class, Program::class, StaticPage::class] as $model) {
+        foreach ([
+            Post::class,
+            Event::class,
+            Program::class,
+            StaticPage::class,
+            Institution::class,
+            Product::class,
+        ] as $model) {
             $model::saved($forget);
             $model::deleted($forget);
         }
+
+        /*
+         * Feature toggles decide which pages exist at all — turning off `toko`
+         * makes the product routes 404. Without this hook the cached XML would
+         * keep advertising those URLs to crawlers indefinitely, since no content
+         * model is touched when a setting changes.
+         */
+        Setting::saved($forget);
+        Setting::deleted($forget);
     }
 
     /**
