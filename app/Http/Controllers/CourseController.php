@@ -113,16 +113,29 @@ class CourseController extends Controller
     }
 
     /**
-     * A month calendar of the logged-in member's course sessions.
+     * A month calendar of the logged-in member's course sessions, optionally
+     * narrowed to a single group the member is registered in via `?group=`.
      */
     public function calendar(Request $request): View
     {
         $calendar = CalendarMonth::fromString($request->query('month'));
 
-        $groupIds = $request->user()->courseRegistrations()
+        $registrations = $request->user()->courseRegistrations()
             ->whereIn('status', ['pending', 'active'])
-            ->pluck('group_id')
-            ->unique();
+            ->with('group')
+            ->get();
+
+        $filteredGroup = null;
+
+        if (filled($groupId = $request->query('group'))) {
+            $filteredGroup = $registrations->firstWhere('group_id', (int) $groupId)?->group;
+
+            abort_if($filteredGroup === null, 404);
+        }
+
+        $groupIds = $filteredGroup
+            ? collect([$filteredGroup->id])
+            : $registrations->pluck('group_id')->unique();
 
         $sessions = GroupSession::query()
             ->whereIn('group_id', $groupIds)
@@ -141,7 +154,45 @@ class CourseController extends Controller
             'robots' => 'noindex, nofollow',
         ];
 
-        return view('courses.calendar', compact('calendar', 'sessions', 'seo'));
+        // Lets each day cell link straight to the member's own session list.
+        $registrationByGroup = $registrations->pluck('id', 'group_id');
+
+        return view('courses.calendar', compact('calendar', 'sessions', 'filteredGroup', 'registrationByGroup', 'seo'));
+    }
+
+    /**
+     * Every session of a single group the logged-in member is registered in,
+     * split into upcoming and past. Cancelled sessions stay visible here (the
+     * calendar hides them) so members can see a meeting was called off.
+     */
+    public function sessions(Request $request, GroupMember $registration): View
+    {
+        abort_unless($registration->user_id === $request->user()->id, 404);
+
+        $group = $registration->group;
+
+        abort_if($group === null, 404);
+
+        $group->load('institution', 'teacher');
+
+        $allSessions = $group->sessions()->ordered()->get();
+
+        $today = today();
+
+        $upcoming = $allSessions->filter(fn (GroupSession $session): bool => $session->date->gte($today))->values();
+        $past = $allSessions->filter(fn (GroupSession $session): bool => $session->date->lt($today))
+            ->sortByDesc('date')
+            ->values();
+
+        $siteName = setting('site_name', config('app.name'));
+
+        $seo = [
+            'title' => "{$group->name} — Sessions | {$siteName}",
+            'description' => "Session schedule for {$group->name}.",
+            'robots' => 'noindex, nofollow',
+        ];
+
+        return view('courses.sessions', compact('registration', 'group', 'upcoming', 'past', 'seo'));
     }
 
     /**

@@ -40,7 +40,7 @@
             <p class="text-white/70 text-sm sm:text-base mt-2">Track the groups you registered for, their schedule, and your status.</p>
         </div>
         <a href="{{ route('courses.calendar') }}"
-           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-white/30 text-white/90 text-sm font-semibold hover:bg-white/10 transition-colors">
+           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 text-slate-900 text-sm font-bold hover:bg-amber-400 transition-colors shadow-lg shadow-amber-500/20">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
             Calendar
         </a>
@@ -76,7 +76,13 @@
                         @if($institution)
                             <span class="text-xs font-bold uppercase tracking-widest text-amber-600">{{ $institution->name }}</span>
                         @endif
-                        <h2 class="font-bold text-lg mt-0.5" style="color:var(--text)">{{ $group?->name ?? 'Group removed' }}</h2>
+                        <h2 class="font-bold text-lg mt-0.5" style="color:var(--text)">
+                            @if($group)
+                                <a href="{{ route('courses.sessions', $registration) }}" class="hover:underline">{{ $group->name }}</a>
+                            @else
+                                Group removed
+                            @endif
+                        </h2>
                         <dl class="mt-3 space-y-1.5 text-sm" style="color:var(--muted)">
                             @if($group && ($schedule = $group->scheduleLabel()))
                                 <div class="flex items-center gap-2">🗓️ <span>{{ $schedule }}</span></div>
@@ -113,12 +119,20 @@
                     </div>
                 @endif
 
-                @if($institution)
-                    <div class="mt-4 pt-4 border-t" style="border-color:var(--border)">
-                        <a href="{{ route('courses.show', $institution) }}" class="inline-flex items-center gap-1.5 text-sm font-semibold" style="color:var(--primary)">
-                            View course
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
-                        </a>
+                @if($group || $institution)
+                    <div class="mt-4 pt-4 border-t flex flex-wrap items-center gap-x-5 gap-y-2" style="border-color:var(--border)">
+                        @if($group)
+                            <a href="{{ route('courses.sessions', $registration) }}" class="inline-flex items-center gap-1.5 text-sm font-bold" style="color:var(--primary)">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                Sessions &amp; schedule
+                            </a>
+                        @endif
+                        @if($institution)
+                            <a href="{{ route('courses.show', $institution) }}" class="inline-flex items-center gap-1.5 text-sm font-semibold" style="color:var(--muted)">
+                                View course
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                            </a>
+                        @endif
                     </div>
                 @endif
             </div>

@@ -25,6 +25,11 @@
 @php
     $today = \Illuminate\Support\Carbon::today();
     $weekdays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    // Keep the group filter (when set) across month navigation.
+    $monthLink = fn (string $month): string => route('courses.calendar', array_filter([
+        'month' => $month,
+        'group' => $filteredGroup?->id,
+    ]));
 @endphp
 
 {{-- ═══════════════════════ HERO ═══════════════════════════════ --}}
@@ -49,15 +54,25 @@
 {{-- ═══════════════════════ CALENDAR ═══════════════════════════ --}}
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
+    {{-- Active group filter --}}
+    @if($filteredGroup)
+        <div class="flex flex-wrap items-center gap-3 mb-5 px-4 py-3 rounded-xl border" style="border-color:var(--border)">
+            <span class="text-sm" style="color:var(--muted)">Showing only</span>
+            <span class="inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200">{{ $filteredGroup->name }}</span>
+            <a href="{{ route('courses.calendar', ['month' => $calendar->param()]) }}"
+               class="ml-auto text-sm font-semibold hover:underline" style="color:var(--primary)">Show all groups</a>
+        </div>
+    @endif
+
     {{-- Month navigation --}}
     <div class="flex items-center justify-between mb-5">
-        <a href="{{ route('courses.calendar', ['month' => $calendar->previousParam()]) }}"
+        <a href="{{ $monthLink($calendar->previousParam()) }}"
            class="inline-flex items-center justify-center w-10 h-10 rounded-xl border transition-colors hover:border-amber-500"
            style="border-color:var(--border);color:var(--text)" aria-label="Previous month">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
         </a>
         <h2 class="text-lg sm:text-xl font-extrabold" style="color:var(--text)">{{ $calendar->label() }}</h2>
-        <a href="{{ route('courses.calendar', ['month' => $calendar->nextParam()]) }}"
+        <a href="{{ $monthLink($calendar->nextParam()) }}"
            class="inline-flex items-center justify-center w-10 h-10 rounded-xl border transition-colors hover:border-amber-500"
            style="border-color:var(--border);color:var(--text)" aria-label="Next month">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
@@ -86,7 +101,7 @@
                      style="{{ $isToday ? '' : 'color:var(--muted)' }}">{{ $day->day }}</div>
 
                 @foreach($daySessions as $session)
-                    <a href="{{ $session->group?->institution ? route('courses.show', $session->group->institution) : '#' }}"
+                    <a href="{{ ($registrationId = $registrationByGroup[$session->group_id] ?? null) ? route('courses.sessions', $registrationId) : '#' }}"
                        class="block rounded-md px-1.5 py-1 text-[10px] sm:text-xs leading-tight bg-amber-50 border border-amber-200 hover:bg-amber-100 transition-colors"
                        title="{{ $session->group?->name }}{{ $session->timeLabel() ? ' · '.$session->timeLabel() : '' }}{{ $session->resolvedLocation() ? ' @ '.$session->resolvedLocation() : '' }}">
                         <span class="font-bold text-amber-800 line-clamp-1">{{ $session->group?->name }}</span>

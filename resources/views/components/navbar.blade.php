@@ -232,6 +232,15 @@
                                     My Courses
                                 </a>
 
+                                <a href="{{ route('courses.calendar') }}"
+                                   class="flex items-center gap-2.5 px-4 py-2.5 text-sm nav-dropdown-item transition-colors"
+                                   style="color:var(--text)">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    Jadwal Saya
+                                </a>
+
                                 <a href="{{ route('profile.edit') }}"
                                    class="flex items-center gap-2.5 px-4 py-2.5 text-sm nav-dropdown-item transition-colors"
                                    style="color:var(--text)">
@@ -383,6 +392,10 @@
                 <a href="{{ route('courses.mine') }}" @click="mobileOpen = false"
                    class="flex items-center justify-center gap-2 w-full py-3 rounded-xl border border-white/25 text-white/80 font-semibold hover:bg-white/10 hover:text-white transition-colors">
                     My Courses
+                </a>
+                <a href="{{ route('courses.calendar') }}" @click="mobileOpen = false"
+                   class="flex items-center justify-center gap-2 w-full py-3 rounded-xl border border-white/25 text-white/80 font-semibold hover:bg-white/10 hover:text-white transition-colors">
+                    Jadwal Saya
                 </a>
                 <a href="{{ route('profile.edit') }}" @click="mobileOpen = false"
                    class="flex items-center justify-center gap-2 w-full py-3 rounded-xl border border-white/25 text-white/80 font-semibold hover:bg-white/10 hover:text-white transition-colors">
