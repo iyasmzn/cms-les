@@ -6,6 +6,8 @@ use App\Models\Category;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -68,6 +70,17 @@ class TeachersTable
                     ->boolean()
                     ->sortable(),
 
+                IconColumn::make('user_id')
+                    ->label('Akun Panel')
+                    ->boolean()
+                    ->trueIcon(Heroicon::CheckBadge)
+                    ->falseIcon(Heroicon::MinusSmall)
+                    ->trueColor('success')
+                    ->falseColor('gray')
+                    ->tooltip(fn ($record): string => $record->user_id
+                        ? 'Sudah punya akun panel: '.$record->user?->email
+                        : 'Belum punya akun panel'),
+
                 TextColumn::make('updated_at')
                     ->label('Diperbarui')
                     ->since()
@@ -96,8 +109,17 @@ class TeachersTable
                 Filter::make('not_active')
                     ->label('Tidak aktif')
                     ->query(fn (Builder $query) => $query->where('is_active', false)),
+
+                Filter::make('has_account')
+                    ->label('Punya akun panel')
+                    ->query(fn (Builder $query) => $query->whereNotNull('user_id')),
+
+                Filter::make('without_account')
+                    ->label('Belum punya akun panel')
+                    ->query(fn (Builder $query) => $query->whereNull('user_id')),
             ])
             ->recordActions([
+                ViewAction::make(),
                 EditAction::make(),
             ])
             ->toolbarActions([

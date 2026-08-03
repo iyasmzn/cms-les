@@ -5,7 +5,9 @@ namespace App\Filament\Resources\Teachers;
 use App\Filament\Resources\Teachers\Pages\CreateTeacher;
 use App\Filament\Resources\Teachers\Pages\EditTeacher;
 use App\Filament\Resources\Teachers\Pages\ListTeachers;
+use App\Filament\Resources\Teachers\Pages\ViewTeacher;
 use App\Filament\Resources\Teachers\Schemas\TeacherForm;
+use App\Filament\Resources\Teachers\Schemas\TeacherInfolist;
 use App\Filament\Resources\Teachers\Tables\TeachersTable;
 use App\Models\Teacher;
 use Filament\Resources\Resource;
@@ -32,6 +34,11 @@ class TeacherResource extends Resource
         return TeacherForm::configure($schema);
     }
 
+    public static function infolist(Schema $schema): Schema
+    {
+        return TeacherInfolist::configure($schema);
+    }
+
     public static function table(Table $table): Table
     {
         return TeachersTable::configure($table);
@@ -47,6 +54,7 @@ class TeacherResource extends Resource
         return [
             'index' => ListTeachers::route('/'),
             'create' => CreateTeacher::route('/create'),
+            'view' => ViewTeacher::route('/{record}'),
             'edit' => EditTeacher::route('/{record}/edit'),
         ];
     }

@@ -114,4 +114,17 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Instructor Default Password
+    |--------------------------------------------------------------------------
+    |
+    | Password yang dipakai saat admin membuatkan akun panel untuk guru /
+    | instruktur dari halaman Guru tanpa mengisi password. Guru sebaiknya
+    | menggantinya setelah login pertama.
+    |
+    */
+
+    'instructor_default_password' => env('INSTRUCTOR_DEFAULT_PASSWORD', 'instruktur123'),
+
 ];

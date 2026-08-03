@@ -72,6 +72,10 @@ class ShieldSeeder extends Seeder
         // Hanya melihat kelompok yang dia latih (lewat teachers.user_id), dan
         // boleh memindahkan member antar kelompok dalam course yang sama.
         // Sengaja tanpa Delete/DeleteAny agar tidak bisa menghapus member.
+        //
+        // Role ini dipasangkan dengan `panel_user` (akses panel) oleh
+        // App\Services\InstructorAccountService saat admin membuatkan akun
+        // panel dari halaman detail Guru.
         $instructorPermissions = [
             'ViewAny:Group', 'View:Group', 'Update:Group', 'MoveMember:Group',
             'ViewAny:GroupSession', 'View:GroupSession', 'Create:GroupSession', 'Update:GroupSession',

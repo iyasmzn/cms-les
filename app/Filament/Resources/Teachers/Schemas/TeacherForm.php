@@ -108,7 +108,7 @@ class TeacherForm
                         ->preload()
                         ->native(false)
                         ->unique(ignoreRecord: true)
-                        ->helperText('Kaitkan ke akun user agar pelatih ini bisa login dan mengelola kelompok yang dilatihnya. Akun tersebut juga perlu diberi role "instructor".')
+                        ->helperText('Kaitkan ke akun user yang sudah ada agar pelatih ini bisa login dan mengelola kelompok yang dilatihnya. Belum punya akun? Buka halaman detail guru lalu klik "Buat Akun Panel" — akun dibuat dari email guru beserta role instructor + panel_user.')
                         ->columnSpanFull(),
 
                     Toggle::make('is_active')
