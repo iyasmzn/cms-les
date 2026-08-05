@@ -117,6 +117,7 @@ Route::get('/program/{program:slug}', [ProgramController::class, 'show'])->name(
 Route::get('/courses', [CourseController::class, 'index'])->name('courses.index');
 Route::get('/my-courses', [CourseController::class, 'mine'])->middleware('auth')->name('courses.mine');
 Route::get('/my-courses/calendar', [CourseController::class, 'calendar'])->middleware('auth')->name('courses.calendar');
+Route::get('/my-courses/billing', [CourseController::class, 'billing'])->middleware('auth')->name('courses.billing');
 Route::get('/my-courses/{registration}/sessions', [CourseController::class, 'sessions'])
     ->middleware('auth')
     ->name('courses.sessions');

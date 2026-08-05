@@ -25,6 +25,14 @@
         'completed' => ['label' => 'Completed', 'class' => 'bg-green-50 text-green-700 border-green-200'],
         'cancelled' => ['label' => 'Cancelled', 'class' => 'bg-red-50 text-red-600 border-red-200'],
     ];
+
+    $billStyles = [
+        'unpaid' => ['label' => 'Unpaid', 'class' => 'text-amber-700'],
+        'paid'   => ['label' => 'Paid',   'class' => 'text-green-600'],
+        'waived' => ['label' => 'Waived', 'class' => 'text-gray-500'],
+    ];
+
+    $rupiah = fn ($n) => 'Rp'.number_format((float) $n, 0, ',', '.');
 @endphp
 
 {{-- ═══════════════════════ HERO ═══════════════════════════════ --}}
@@ -55,11 +63,20 @@
                 </div>
             </div>
 
-            <a href="{{ route('courses.calendar', ['group' => $group->id]) }}"
-               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 text-slate-900 text-sm font-bold hover:bg-amber-400 transition-colors shrink-0">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                Calendar view
-            </a>
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
+                @if($paymentBySession->isNotEmpty())
+                    <a href="{{ route('courses.billing', ['registration' => $registration->id]) }}"
+                       class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm font-bold hover:bg-white/20 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>
+                        Bills
+                    </a>
+                @endif
+                <a href="{{ route('courses.calendar', ['group' => $group->id]) }}"
+                   class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 text-slate-900 text-sm font-bold hover:bg-amber-400 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    Calendar view
+                </a>
+            </div>
         </div>
     </div>
 </section>
@@ -110,6 +127,12 @@
                             @endif
                             @if($session->resolvedLocation())
                                 <div class="flex items-center gap-1.5">📍 <span>{{ $session->resolvedLocation() }}</span></div>
+                            @endif
+                            @if($payment = $paymentBySession->get($session->id))
+                                @php $bill = $billStyles[$payment->status] ?? $billStyles['unpaid']; @endphp
+                                <div class="flex items-center gap-1.5 font-semibold {{ $bill['class'] }}">
+                                    💳 <span>{{ $rupiah($payment->amount) }} · {{ $bill['label'] }}</span>
+                                </div>
                             @endif
                         </dl>
 

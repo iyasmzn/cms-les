@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Concerns\ProtectsAgainstSpam;
+use App\Models\CoursePayment;
 use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\GroupSession;
@@ -168,6 +169,60 @@ class CourseController extends Controller
     }
 
     /**
+     * The logged-in member's course bills across every registration, newest
+     * first, optionally narrowed to one registration via `?registration=`.
+     */
+    public function billing(Request $request): View
+    {
+        $registrations = $request->user()->courseRegistrations()
+            ->with(['group.institution', 'payments.session'])
+            ->latest()
+            ->get();
+
+        $selected = null;
+
+        if (filled($registrationId = $request->query('registration'))) {
+            $selected = $registrations->firstWhere('id', (int) $registrationId);
+
+            abort_if($selected === null, 404);
+        }
+
+        $billed = $selected ? collect([$selected]) : $registrations;
+
+        // Newest bill first, falling back to the record's own date for bills
+        // not tied to a session (one-off charges such as registration fees).
+        $billed->each(fn (GroupMember $registration) => $registration->setRelation(
+            'payments',
+            $registration->payments
+                ->sortByDesc(fn (CoursePayment $payment) => $payment->session?->date ?? $payment->created_at)
+                ->values(),
+        ));
+
+        $totals = [
+            'billed' => 0.0,
+            'paid' => 0.0,
+            'outstanding' => 0.0,
+            'waived' => 0.0,
+        ];
+
+        foreach ($billed as $registration) {
+            foreach ($registration->paymentTotals() as $key => $amount) {
+                $totals[$key] += $amount;
+            }
+        }
+
+        $siteName = setting('site_name', config('app.name'));
+
+        $seo = [
+            'title' => "My Bills | {$siteName}",
+            'description' => 'Your course bills and payment history.',
+            'robots' => 'noindex, nofollow',
+        ];
+
+        return view('courses.billing', compact('registrations', 'billed', 'selected', 'totals', 'seo'));
+    }
+
+    /**
      * Every session of a single group the logged-in member is registered in,
      * split into upcoming and past. Cancelled sessions stay visible here (the
      * calendar hides them) so members can see a meeting was called off.
@@ -181,6 +236,12 @@ class CourseController extends Controller
         abort_if($group === null, 404);
 
         $group->load('institution', 'teacher');
+
+        // Keyed by session so each row can show whether that meeting is billed.
+        $paymentBySession = $registration->payments()
+            ->whereNotNull('group_session_id')
+            ->get()
+            ->keyBy('group_session_id');
 
         $allSessions = $group->sessions()->ordered()->get();
 
@@ -199,7 +260,7 @@ class CourseController extends Controller
             'robots' => 'noindex, nofollow',
         ];
 
-        return view('courses.sessions', compact('registration', 'group', 'upcoming', 'past', 'seo'));
+        return view('courses.sessions', compact('registration', 'group', 'upcoming', 'past', 'paymentBySession', 'seo'));
     }
 
     /**

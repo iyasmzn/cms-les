@@ -93,11 +93,36 @@ class GroupMember extends Model
     }
 
     /**
+     * Billing totals across this member's course payments. Computed from the
+     * `payments` relation rather than per-status queries, so a list of
+     * registrations costs one eager-loaded query instead of several per row.
+     *
+     * @return array{billed: float, paid: float, outstanding: float, waived: float}
+     */
+    public function paymentTotals(): array
+    {
+        $sumOf = fn (string $status): float => (float) $this->payments
+            ->where('status', $status)
+            ->sum('amount');
+
+        $paid = $sumOf('paid');
+        $outstanding = $sumOf('unpaid');
+        $waived = $sumOf('waived');
+
+        return [
+            'billed' => $paid + $outstanding + $waived,
+            'paid' => $paid,
+            'outstanding' => $outstanding,
+            'waived' => $waived,
+        ];
+    }
+
+    /**
      * Total amount this member still owes (unpaid payments).
      */
     public function outstandingTotal(): float
     {
-        return (float) $this->payments()->where('status', 'unpaid')->sum('amount');
+        return $this->paymentTotals()['outstanding'];
     }
 
     /**
@@ -105,7 +130,7 @@ class GroupMember extends Model
      */
     public function paidTotal(): float
     {
-        return (float) $this->payments()->where('status', 'paid')->sum('amount');
+        return $this->paymentTotals()['paid'];
     }
 
     /**

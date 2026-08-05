@@ -39,11 +39,18 @@
             <h1 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-tight">Your Course Registrations</h1>
             <p class="text-white/70 text-sm sm:text-base mt-2">Track the groups you registered for, their schedule, and your status.</p>
         </div>
-        <a href="{{ route('courses.calendar') }}"
-           class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 text-slate-900 text-sm font-bold hover:bg-amber-400 transition-colors shadow-lg shadow-amber-500/20">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-            Calendar
-        </a>
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ route('courses.billing') }}"
+               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white text-sm font-bold hover:bg-white/20 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>
+                Billing
+            </a>
+            <a href="{{ route('courses.calendar') }}"
+               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 text-slate-900 text-sm font-bold hover:bg-amber-400 transition-colors shadow-lg shadow-amber-500/20">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                Calendar
+            </a>
+        </div>
     </div>
 </section>
 
@@ -66,8 +73,7 @@
                 $group = $registration->group;
                 $institution = $group?->institution;
                 $status = $statusStyles[$registration->status] ?? $statusStyles['pending'];
-                $paidTotal = $registration->payments->where('status', 'paid')->sum('amount');
-                $outstandingTotal = $registration->payments->where('status', 'unpaid')->sum('amount');
+                $totals = $registration->paymentTotals();
                 $rupiah = fn ($n) => 'Rp'.number_format((float) $n, 0, ',', '.');
             @endphp
             <div class="fi-card border p-5 sm:p-6" style="border-color:var(--border)" data-aos="fade-up" data-aos-delay="{{ $loop->index * 50 }}">
@@ -107,24 +113,35 @@
                 @if($registration->payments->isNotEmpty())
                     <div class="mt-4 pt-4 border-t flex flex-wrap items-center gap-x-6 gap-y-2 text-sm" style="border-color:var(--border)">
                         <span class="inline-flex items-center gap-1.5" style="color:var(--muted)">
-                            💳 Paid: <span class="font-semibold text-green-600">{{ $rupiah($paidTotal) }}</span>
+                            💳 Paid: <span class="font-semibold text-green-600">{{ $rupiah($totals['paid']) }}</span>
                         </span>
-                        @if($outstandingTotal > 0)
+                        @if($totals['outstanding'] > 0)
                             <span class="inline-flex items-center gap-1.5" style="color:var(--muted)">
-                                ⏳ Outstanding: <span class="font-semibold text-amber-600">{{ $rupiah($outstandingTotal) }}</span>
+                                ⏳ Outstanding: <span class="font-semibold text-amber-600">{{ $rupiah($totals['outstanding']) }}</span>
                             </span>
                         @else
                             <span class="inline-flex items-center gap-1.5 text-green-600 font-semibold">✅ Fully paid</span>
                         @endif
+                        @if($totals['waived'] > 0)
+                            <span class="inline-flex items-center gap-1.5" style="color:var(--muted)">
+                                🎟️ Waived: <span class="font-semibold">{{ $rupiah($totals['waived']) }}</span>
+                            </span>
+                        @endif
                     </div>
                 @endif
 
-                @if($group || $institution)
+                @if($group || $institution || $registration->payments->isNotEmpty())
                     <div class="mt-4 pt-4 border-t flex flex-wrap items-center gap-x-5 gap-y-2" style="border-color:var(--border)">
                         @if($group)
                             <a href="{{ route('courses.sessions', $registration) }}" class="inline-flex items-center gap-1.5 text-sm font-bold" style="color:var(--primary)">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                 Sessions &amp; schedule
+                            </a>
+                        @endif
+                        @if($registration->payments->isNotEmpty())
+                            <a href="{{ route('courses.billing', ['registration' => $registration->id]) }}" class="inline-flex items-center gap-1.5 text-sm font-bold" style="color:var(--primary)">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>
+                                Bills &amp; payments
                             </a>
                         @endif
                         @if($institution)
