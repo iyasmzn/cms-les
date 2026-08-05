@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Groups\RelationManagers;
 
 use App\Models\GroupSession;
 use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
@@ -21,6 +22,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 
 class SessionsRelationManager extends RelationManager
@@ -182,6 +184,22 @@ class SessionsRelationManager extends RelationManager
                 CreateAction::make()->label('Add Session'),
             ])
             ->recordActions([
+                Action::make('markCompleted')
+                    ->label('Mark completed')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn (GroupSession $record): bool => $record->status !== 'completed')
+                    ->action(fn (GroupSession $record) => $record->update(['status' => 'completed'])),
+
+                Action::make('markCancelled')
+                    ->label('Cancel')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalDescription('Mark this session as cancelled.')
+                    ->visible(fn (GroupSession $record): bool => $record->status !== 'cancelled')
+                    ->action(fn (GroupSession $record) => $record->update(['status' => 'cancelled'])),
+
                 Action::make('billMembers')
                     ->label('Bill members')
                     ->icon('heroicon-o-banknotes')
@@ -204,6 +222,14 @@ class SessionsRelationManager extends RelationManager
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    BulkAction::make('markCompleted')
+                        ->label('Mark completed')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->action(fn (Collection $records) => $records->each->update(['status' => 'completed']))
+                        ->deselectRecordsAfterCompletion(),
+
                     DeleteBulkAction::make(),
                 ]),
             ]);
