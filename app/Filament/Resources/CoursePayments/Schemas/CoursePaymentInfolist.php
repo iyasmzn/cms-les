@@ -3,8 +3,8 @@
 namespace App\Filament\Resources\CoursePayments\Schemas;
 
 use App\Models\CoursePayment;
-use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Components\ViewEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -91,11 +91,13 @@ class CoursePaymentInfolist
                         ->placeholder('—')
                         ->columnSpanFull(),
 
-                    ImageEntry::make('proof_path')
+                    ViewEntry::make('proof_path')
                         ->label('Proof of Payment')
-                        ->disk('public')
-                        ->height(320)
-                        ->placeholder('No proof attached')
+                        ->view('filament.infolists.image-preview')
+                        ->viewData(fn (CoursePayment $record): array => [
+                            'url' => $record->proofUrl(),
+                            'caption' => 'Click to zoom',
+                        ])
                         ->columnSpanFull(),
                 ]),
 

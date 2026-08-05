@@ -114,6 +114,17 @@ class CoursePaymentResourceTest extends TestCase
             ->assertActionDoesNotExist('delete');
     }
 
+    public function test_the_view_page_renders_the_proof_in_a_zoomable_preview(): void
+    {
+        $payment = CoursePayment::factory()->create();
+        $payment->submitConfirmation('transfer', PaymentAccount::factory()->create()->id, 'payment-proofs/proof.jpg');
+
+        Livewire::test(ViewCoursePayment::class, ['record' => $payment->id])
+            ->assertSuccessful()
+            ->assertSee('/storage/payment-proofs/proof.jpg')
+            ->assertSee('Click to zoom');
+    }
+
     public function test_change_status_settles_a_payment_with_a_method(): void
     {
         $payment = CoursePayment::factory()->create();
