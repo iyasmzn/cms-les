@@ -118,6 +118,12 @@ Route::get('/courses', [CourseController::class, 'index'])->name('courses.index'
 Route::get('/my-courses', [CourseController::class, 'mine'])->middleware('auth')->name('courses.mine');
 Route::get('/my-courses/calendar', [CourseController::class, 'calendar'])->middleware('auth')->name('courses.calendar');
 Route::get('/my-courses/billing', [CourseController::class, 'billing'])->middleware('auth')->name('courses.billing');
+Route::get('/my-courses/bills/{payment}/pay', [CourseController::class, 'payForm'])
+    ->middleware('auth')
+    ->name('courses.bills.pay');
+Route::post('/my-courses/bills/{payment}/pay', [CourseController::class, 'pay'])
+    ->middleware(['auth', 'throttle:12,1'])
+    ->name('courses.bills.pay.store');
 Route::get('/my-courses/{registration}/sessions', [CourseController::class, 'sessions'])
     ->middleware('auth')
     ->name('courses.sessions');

@@ -115,6 +115,21 @@ class CourseBillingTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_an_unpaid_bill_links_to_the_payment_form(): void
+    {
+        $user = User::factory()->create();
+        $registration = GroupMember::factory()->active()->create(['user_id' => $user->id]);
+
+        $unpaid = CoursePayment::factory()->create(['group_member_id' => $registration->id]);
+        $paid = CoursePayment::factory()->paid()->create(['group_member_id' => $registration->id]);
+
+        $response = $this->actingAs($user)->get(route('courses.billing'));
+
+        $response->assertStatus(200);
+        $response->assertSee(route('courses.bills.pay', $unpaid), false);
+        $response->assertDontSee(route('courses.bills.pay', $paid), false);
+    }
+
     public function test_it_shows_an_empty_state_when_nothing_is_billed(): void
     {
         $user = User::factory()->create();

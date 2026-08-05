@@ -8,8 +8,10 @@ use App\Models\Group;
 use App\Models\GroupMember;
 use App\Models\GroupSession;
 use App\Models\Institution;
+use App\Models\PaymentAccount;
 use App\Models\User;
 use App\Support\CalendarMonth;
+use Closure;
 use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
@@ -198,18 +200,15 @@ class CourseController extends Controller
                 ->values(),
         ));
 
-        $totals = [
-            'billed' => 0.0,
-            'paid' => 0.0,
-            'outstanding' => 0.0,
-            'waived' => 0.0,
-        ];
+        $totals = [];
 
         foreach ($billed as $registration) {
             foreach ($registration->paymentTotals() as $key => $amount) {
-                $totals[$key] += $amount;
+                $totals[$key] = ($totals[$key] ?? 0.0) + $amount;
             }
         }
+
+        $totals += ['billed' => 0.0, 'paid' => 0.0, 'outstanding' => 0.0, 'review' => 0.0, 'waived' => 0.0];
 
         $siteName = setting('site_name', config('app.name'));
 
@@ -220,6 +219,107 @@ class CourseController extends Controller
         ];
 
         return view('courses.billing', compact('registrations', 'billed', 'selected', 'totals', 'seo'));
+    }
+
+    /**
+     * The payment form for a single bill: pick a channel, see where to pay,
+     * and attach proof.
+     */
+    public function payForm(Request $request, CoursePayment $payment): View
+    {
+        $this->authorizeBill($request, $payment);
+
+        abort_unless($payment->isPayable(), 404);
+
+        $payment->load('member.group.institution', 'session');
+
+        $accounts = PaymentAccount::query()->active()->ordered()->get()
+            ->filter(fn (PaymentAccount $account): bool => $account->isPresentable());
+
+        $siteName = setting('site_name', config('app.name'));
+
+        $seo = [
+            'title' => "Pay Bill | {$siteName}",
+            'description' => 'Settle a course bill and upload your proof of payment.',
+            'robots' => 'noindex, nofollow',
+        ];
+
+        return view('courses.pay', [
+            'payment' => $payment,
+            'bankAccounts' => $accounts->where('type', 'bank')->values(),
+            'qrisAccounts' => $accounts->where('type', 'qris')->values(),
+            'seo' => $seo,
+        ]);
+    }
+
+    /**
+     * Record the member's payment confirmation and queue it for verification.
+     * Nothing is marked paid here — an admin still has to check the proof.
+     */
+    public function pay(Request $request, CoursePayment $payment): RedirectResponse
+    {
+        $this->authorizeBill($request, $payment);
+
+        abort_unless($payment->isPayable(), 404);
+
+        $presentableAccounts = PaymentAccount::query()->active()->get()
+            ->filter(fn (PaymentAccount $account): bool => $account->isPresentable());
+
+        $data = $request->validate([
+            'method' => ['required', Rule::in(array_keys(CoursePayment::memberMethodOptions()))],
+            'payment_account_id' => [
+                Rule::requiredIf(fn (): bool => in_array($request->input('method'), ['transfer', 'qris'], true)),
+                'nullable',
+                Rule::in($presentableAccounts->pluck('id')->all()),
+                // A QRIS payment tagged with a bank account (or vice versa)
+                // would send the admin looking in the wrong place.
+                function (string $attribute, mixed $value, Closure $fail) use ($request, $presentableAccounts): void {
+                    $expected = $request->input('method') === 'qris' ? 'qris' : 'bank';
+
+                    if ($presentableAccounts->firstWhere('id', (int) $value)?->type !== $expected) {
+                        $fail('The selected destination does not match the payment method.');
+                    }
+                },
+            ],
+            // Cash is settled in person, so proof is only demanded when money
+            // was moved without a witness.
+            'proof' => [
+                Rule::requiredIf(fn (): bool => in_array($request->input('method'), ['transfer', 'qris'], true)),
+                'nullable',
+                'image',
+                'mimes:jpg,jpeg,png,webp',
+                'max:4096',
+            ],
+            'payer_note' => ['nullable', 'string', 'max:500'],
+        ], [
+            'payment_account_id.required' => 'Choose where you sent the payment.',
+            'proof.required' => 'Attach a screenshot or photo of your transfer receipt.',
+        ]);
+
+        $proofPath = $request->hasFile('proof')
+            ? $request->file('proof')->store('payment-proofs', 'public')
+            : null;
+
+        $payment->submitConfirmation(
+            $data['method'],
+            isset($data['payment_account_id']) ? (int) $data['payment_account_id'] : null,
+            $proofPath,
+            $data['payer_note'] ?? null,
+        );
+
+        return redirect()
+            ->route('courses.billing', ['registration' => $payment->group_member_id])
+            ->with('success', $data['method'] === 'cash'
+                ? 'Thanks — we have noted that you are paying cash. The admin will confirm it once received.'
+                : 'Payment confirmation sent. The admin will verify your proof shortly.');
+    }
+
+    /**
+     * A bill may only be touched by the account that owns the registration.
+     */
+    private function authorizeBill(Request $request, CoursePayment $payment): void
+    {
+        abort_unless($payment->member?->user_id === $request->user()->id, 404);
     }
 
     /**

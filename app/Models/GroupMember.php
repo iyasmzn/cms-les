@@ -97,7 +97,10 @@ class GroupMember extends Model
      * `payments` relation rather than per-status queries, so a list of
      * registrations costs one eager-loaded query instead of several per row.
      *
-     * @return array{billed: float, paid: float, outstanding: float, waived: float}
+     * `outstanding` covers everything not settled yet, including confirmations
+     * still waiting on an admin to verify them.
+     *
+     * @return array{billed: float, paid: float, outstanding: float, review: float, waived: float}
      */
     public function paymentTotals(): array
     {
@@ -106,13 +109,15 @@ class GroupMember extends Model
             ->sum('amount');
 
         $paid = $sumOf('paid');
-        $outstanding = $sumOf('unpaid');
+        $unpaid = $sumOf('unpaid');
+        $review = $sumOf('review');
         $waived = $sumOf('waived');
 
         return [
-            'billed' => $paid + $outstanding + $waived,
+            'billed' => $paid + $unpaid + $review + $waived,
             'paid' => $paid,
-            'outstanding' => $outstanding,
+            'outstanding' => $unpaid + $review,
+            'review' => $review,
             'waived' => $waived,
         ];
     }

@@ -122,6 +122,11 @@
                         @else
                             <span class="inline-flex items-center gap-1.5 text-green-600 font-semibold">✅ Fully paid</span>
                         @endif
+                        @if($totals['review'] > 0)
+                            <span class="inline-flex items-center gap-1.5" style="color:var(--muted)">
+                                ⏱️ In verification: <span class="font-semibold text-blue-600">{{ $rupiah($totals['review']) }}</span>
+                            </span>
+                        @endif
                         @if($totals['waived'] > 0)
                             <span class="inline-flex items-center gap-1.5" style="color:var(--muted)">
                                 🎟️ Waived: <span class="font-semibold">{{ $rupiah($totals['waived']) }}</span>

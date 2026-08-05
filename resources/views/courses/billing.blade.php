@@ -28,6 +28,7 @@
 
     $billStyles = [
         'unpaid' => ['label' => 'Unpaid', 'class' => 'bg-amber-50 text-amber-700 border-amber-200'],
+        'review' => ['label' => 'Awaiting verification', 'class' => 'bg-blue-50 text-blue-700 border-blue-200'],
         'paid'   => ['label' => 'Paid',   'class' => 'bg-green-50 text-green-700 border-green-200'],
         'waived' => ['label' => 'Waived', 'class' => 'bg-gray-100 text-gray-500 border-gray-200'],
     ];
@@ -72,6 +73,13 @@
 
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
 
+    @if(session('success'))
+        <div class="no-print flex items-start gap-3 p-4 rounded-xl bg-green-50 border border-green-200 text-green-800" data-aos="fade-up">
+            <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <p class="text-sm font-medium">{{ session('success') }}</p>
+        </div>
+    @endif
+
     @if($registrations->isEmpty())
         <div class="fi-card p-10 text-center" data-aos="fade-up">
             <div class="text-5xl mb-4">🧾</div>
@@ -110,7 +118,8 @@
                 <div class="min-w-0">
                     <h2 class="font-bold text-amber-900">{{ $rupiah($totals['outstanding']) }} outstanding</h2>
                     <p class="text-sm text-amber-800 mt-1">
-                        {{ $unpaidCount }} {{ Str::plural('bill', $unpaidCount) }} still unpaid. Settle them with the course admin — your payment is marked here once it has been recorded.
+                        {{ $unpaidCount }} {{ Str::plural('bill', $unpaidCount) }} still unpaid@if($totals['review'] > 0), and {{ $rupiah($totals['review']) }} waiting for the admin to verify@endif.
+                        Open a bill to pay by cash, bank transfer, or QRIS.
                     </p>
                 </div>
             </div>
@@ -221,7 +230,28 @@
                                         ✅ <span>Paid {{ $payment->paid_at->translatedFormat('d M Y') }}@if($payment->method) · {{ $methodLabels[$payment->method] ?? $payment->method }}@endif</span>
                                     </div>
                                 @endif
+                                @if($payment->isAwaitingVerification())
+                                    <div class="flex items-center gap-1.5 text-blue-600 font-semibold">
+                                        ⏱️ <span>
+                                            Confirmed {{ $payment->submitted_at?->translatedFormat('d M Y') }}@if($payment->method) via {{ $methodLabels[$payment->method] ?? $payment->method }}@endif — waiting for the admin
+                                        </span>
+                                    </div>
+                                @endif
                             </dl>
+
+                            @if($payment->rejection_reason)
+                                <p class="text-sm mt-1.5 text-red-600">
+                                    <span class="font-semibold">Confirmation rejected:</span> {{ $payment->rejection_reason }} — please submit it again.
+                                </p>
+                            @endif
+
+                            @if($payment->isPayable())
+                                <a href="{{ route('courses.bills.pay', $payment) }}"
+                                   class="no-print btn-primary inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold mt-3">
+                                    Pay this bill
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                                </a>
+                            @endif
 
                             @if($payment->notes)
                                 <p class="text-sm mt-1.5" style="color:var(--muted)">{{ $payment->notes }}</p>

@@ -28,6 +28,7 @@
 
     $billStyles = [
         'unpaid' => ['label' => 'Unpaid', 'class' => 'text-amber-700'],
+        'review' => ['label' => 'Awaiting verification', 'class' => 'text-blue-600'],
         'paid'   => ['label' => 'Paid',   'class' => 'text-green-600'],
         'waived' => ['label' => 'Waived', 'class' => 'text-gray-500'],
     ];
