@@ -41,7 +41,11 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
+            // Host-relative so uploads resolve against whatever origin serves
+            // the page (dev on :8000, the production domain) rather than a
+            // hard-coded APP_URL that silently breaks every image when the two
+            // disagree. Matches how asset() already behaves elsewhere.
+            'url' => '/storage',
             'visibility' => 'public',
             'throw' => false,
             'report' => false,

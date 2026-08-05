@@ -130,6 +130,23 @@ class CourseBillingTest extends TestCase
         $response->assertDontSee(route('courses.bills.pay', $paid), false);
     }
 
+    public function test_the_outstanding_banner_renders_without_leaking_blade(): void
+    {
+        $user = User::factory()->create();
+        $registration = GroupMember::factory()->active()->create(['user_id' => $user->id]);
+
+        CoursePayment::factory()->create(['group_member_id' => $registration->id, 'amount' => 30000]);
+        CoursePayment::factory()->create(['group_member_id' => $registration->id, 'amount' => 20000])
+            ->submitConfirmation('cash');
+
+        $response = $this->actingAs($user)->get(route('courses.billing'));
+
+        $response->assertStatus(200);
+        $response->assertSee('1 bill still unpaid, and Rp20.000 waiting for the admin to verify.');
+        $response->assertDontSee('@if', false);
+        $response->assertDontSee('@endif', false);
+    }
+
     public function test_it_shows_an_empty_state_when_nothing_is_billed(): void
     {
         $user = User::factory()->create();

@@ -116,6 +116,9 @@ class CoursePaymentForm
                         ->disk('public')
                         ->directory('payment-proofs')
                         ->visibility('public')
+                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                        ->automaticallyResizeImagesToWidth('1600')
+                        ->maxSize(4096)
                         ->openable()
                         ->downloadable()
                         ->columnSpanFull(),

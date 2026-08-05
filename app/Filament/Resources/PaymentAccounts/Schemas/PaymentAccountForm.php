@@ -65,6 +65,10 @@ class PaymentAccountForm
                         ->directory('payment-accounts')
                         ->visibility('public')
                         ->imageEditor()
+                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                        // Resized in the browser like every other panel upload,
+                        // but kept generous so the QR stays scannable.
+                        ->automaticallyResizeImagesToWidth('1200')
                         ->maxSize(4096)
                         ->required()
                         ->helperText('The QR code members scan. Keep it sharp — it is shown full width on mobile.')

@@ -117,9 +117,15 @@
                 <div class="text-2xl leading-none">⏳</div>
                 <div class="min-w-0">
                     <h2 class="font-bold text-amber-900">{{ $rupiah($totals['outstanding']) }} outstanding</h2>
+                    @php
+                        $outstandingSummary = "{$unpaidCount} ".Str::plural('bill', $unpaidCount).' still unpaid';
+
+                        if ($totals['review'] > 0) {
+                            $outstandingSummary .= ', and '.$rupiah($totals['review']).' waiting for the admin to verify';
+                        }
+                    @endphp
                     <p class="text-sm text-amber-800 mt-1">
-                        {{ $unpaidCount }} {{ Str::plural('bill', $unpaidCount) }} still unpaid@if($totals['review'] > 0), and {{ $rupiah($totals['review']) }} waiting for the admin to verify@endif.
-                        Open a bill to pay by cash, bank transfer, or QRIS.
+                        {{ $outstandingSummary }}. Open a bill to pay by cash, bank transfer, or QRIS.
                     </p>
                 </div>
             </div>

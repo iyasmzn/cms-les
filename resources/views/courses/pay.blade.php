@@ -34,6 +34,12 @@
     .course-hint { font-size:.75rem; }
     .channel-card { display:block; border:1px solid var(--border); border-radius:1rem; padding:1rem; cursor:pointer; transition:border-color .15s, background-color .15s; }
     .channel-card.is-active { border-color:#d97706; background:rgba(217,119,6,.06); }
+    .proof-dropzone {
+        display:block; width:100%; padding:1rem; cursor:pointer;
+        border:1px dashed var(--border); border-radius:1rem;
+        transition:border-color .15s, background-color .15s;
+    }
+    .proof-dropzone:hover, .proof-dropzone.is-dragging { border-color:#d97706; background:rgba(217,119,6,.06); }
     [x-cloak] { display: none !important; }
 </style>
 @endpush
@@ -128,7 +134,7 @@
 
     {{-- ═══════════════════ PAYMENT FORM ══════════════════════ --}}
     <form method="POST" action="{{ route('courses.bills.pay.store', $payment) }}" enctype="multipart/form-data"
-          x-data="{ method: '{{ $defaultMethod }}', account: '{{ $defaultAccount }}' }" class="space-y-6" data-aos="fade-up">
+          x-data="{ method: '{{ $defaultMethod }}', account: '{{ $defaultAccount }}', busy: false }" class="space-y-6" data-aos="fade-up">
         @csrf
 
         {{-- Channel picker --}}
@@ -257,15 +263,61 @@
                 </p>
             </div>
 
-            <div>
+            <div x-data="proofUpload()">
                 <label for="proof" class="course-label">
                     Proof of payment
                     <span x-show="method !== 'cash'" x-cloak class="text-red-500">*</span>
                     <span x-show="method === 'cash'" x-cloak style="color:var(--muted)">(optional)</span>
                 </label>
+
+                {{-- Drop zone doubles as the file picker; the input itself stays
+                     in the DOM so the browser still posts the file. --}}
+                <label for="proof"
+                       class="proof-dropzone"
+                       :class="{ 'is-dragging': dragging }"
+                       @dragover.prevent="dragging = true"
+                       @dragleave.prevent="dragging = false"
+                       @drop.prevent="dragging = false; take($event.dataTransfer.files[0])">
+                    <template x-if="! preview && ! busy">
+                        <div class="text-center py-2">
+                            <div class="text-3xl">🧾</div>
+                            <p class="text-sm font-semibold mt-2" style="color:var(--text)">Choose an image or drop it here</p>
+                            <p class="course-hint mt-0.5" style="color:var(--muted)">JPG, PNG, or WebP · shrunk automatically before upload.</p>
+                        </div>
+                    </template>
+
+                    <template x-if="busy">
+                        <div class="text-center py-4">
+                            <div class="text-3xl animate-pulse">⏳</div>
+                            <p class="text-sm font-semibold mt-2" style="color:var(--text)">Compressing image…</p>
+                        </div>
+                    </template>
+
+                    <template x-if="preview && ! busy">
+                        <div class="flex items-start gap-4">
+                            <img :src="preview" alt="Proof preview"
+                                 class="w-28 h-28 object-cover rounded-xl border shrink-0" style="border-color:var(--border)">
+                            <div class="min-w-0 flex-1 text-left">
+                                <p class="text-sm font-bold truncate" style="color:var(--text)" x-text="name"></p>
+                                <p class="course-hint mt-0.5" style="color:var(--muted)" x-text="size"></p>
+                                <p class="course-hint mt-1 text-green-600" x-show="savedPercent > 0" x-cloak>
+                                    Compressed <span x-text="savedPercent"></span>% smaller before upload.
+                                </p>
+                                <p class="course-hint mt-2 text-red-600" x-show="tooLarge" x-cloak>
+                                    Still over 4 MB — please pick a smaller image.
+                                </p>
+                                <div class="flex items-center gap-3 mt-2">
+                                    <span class="text-xs font-bold" style="color:var(--primary)">Replace</span>
+                                    <button type="button" @click.prevent="clear()" class="text-xs font-bold text-red-600">Remove</button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </label>
+
                 <input type="file" id="proof" name="proof" accept="image/jpeg,image/png,image/webp"
-                       class="course-input @error('proof') border-red-400 @enderror">
-                <p class="course-hint mt-1" style="color:var(--muted)">JPG, PNG, or WebP · max 4 MB.</p>
+                       class="sr-only" x-ref="input" @change="take($event.target.files[0])">
+
                 @error('proof')<p class="course-hint text-red-500 mt-1">{{ $message }}</p>@enderror
             </div>
 
@@ -279,8 +331,9 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
-            <button type="submit" class="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold">
-                Send confirmation
+            <button type="submit" :disabled="busy" :class="{ 'opacity-50 cursor-not-allowed': busy }"
+                    class="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold">
+                <span x-text="busy ? 'Preparing image…' : 'Send confirmation'">Send confirmation</span>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
             </button>
             <a href="{{ route('courses.billing', ['registration' => $payment->group_member_id]) }}"
@@ -289,3 +342,101 @@
     </form>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    /**
+     * Keeps the real file input as the single source of truth (so the form
+     * still posts normally) while showing a live preview, and shrinks the image
+     * in the browser first — receipts straight from a phone camera are often
+     * 4–8 MB, which the upload limit would otherwise reject.
+     */
+    function proofUpload() {
+        const MAX_EDGE = 1600;
+        const QUALITY = 0.8;
+
+        return {
+            preview: null,
+            name: null,
+            size: null,
+            savedPercent: 0,
+            tooLarge: false,
+            dragging: false,
+            // `busy` deliberately lives on the form scope so the submit button
+            // can stay disabled until the compressed file is in the input.
+
+            async take(file) {
+                if (! file || ! file.type.startsWith('image/')) {
+                    return;
+                }
+
+                this.busy = true;
+
+                const original = file.size;
+                const processed = await this.compress(file);
+
+                // A dropped or re-encoded file never reaches the input by itself.
+                const transfer = new DataTransfer();
+                transfer.items.add(processed);
+                this.$refs.input.files = transfer.files;
+
+                URL.revokeObjectURL(this.preview);
+
+                this.preview = URL.createObjectURL(processed);
+                this.name = processed.name;
+                this.size = (processed.size / 1024 / 1024).toFixed(2) + ' MB';
+                this.savedPercent = processed.size < original
+                    ? Math.round((1 - processed.size / original) * 100)
+                    : 0;
+                this.tooLarge = processed.size > 4 * 1024 * 1024;
+                this.busy = false;
+            },
+
+            /**
+             * Downscale to fit MAX_EDGE and re-encode as JPEG. Returns the
+             * original file whenever the browser can't decode it or the result
+             * would not actually be smaller.
+             */
+            async compress(file) {
+                try {
+                    const bitmap = await createImageBitmap(file);
+                    const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
+
+                    if (scale === 1 && file.size <= 800 * 1024) {
+                        return file;
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.round(bitmap.width * scale);
+                    canvas.height = Math.round(bitmap.height * scale);
+                    canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+
+                    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', QUALITY));
+
+                    if (! blob || blob.size >= file.size) {
+                        return file;
+                    }
+
+                    return new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', {
+                        type: 'image/jpeg',
+                        lastModified: Date.now(),
+                    });
+                } catch (error) {
+                    return file;
+                }
+            },
+
+            clear() {
+                URL.revokeObjectURL(this.preview);
+
+                this.$refs.input.value = '';
+                this.preview = null;
+                this.name = null;
+                this.size = null;
+                this.savedPercent = 0;
+                this.tooLarge = false;
+            },
+        };
+    }
+</script>
+@endpush
